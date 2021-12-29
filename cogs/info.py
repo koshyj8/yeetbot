@@ -104,6 +104,10 @@ class Information(commands.Cog):
 				await ctx.send("`just kidding he is a bot!`")
 
 	@commands.command()
+	async def github(self, ctx):
+		await ctx.send("<https://github.com/koshyj8/yeetbot>")
+
+	@commands.command()
 	async def invite(self,ctx):
 		'''Bot Invite Link'''
 		await ctx.send("`Bot Invite Link`",components=[Button(style=ButtonStyle.URL, label="Invite", url="https://discord.com/oauth2/authorize?client_id=760126094338031626&permissions=8&scope=bot")])
