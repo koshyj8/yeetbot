@@ -46,7 +46,7 @@ helikopter==1.0.4
 hpack==3.0.0
 hstspreload==2021.12.1
 httpcore==0.9.1
-httpx
+httpx==0.13.3
 hyperframe==5.2.0
 idna==2.10
 isort==5.5.4
@@ -104,4 +104,3 @@ win32-setctime==1.0.4
 wrapt==1.12.1
 yarl==1.7.2
 youtube-dl==2021.12.17
-youtube-search-python==1.5.3
