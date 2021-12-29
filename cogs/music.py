@@ -363,13 +363,6 @@ class MusicPlayer(commands.Cog, name='Music'):
 		track_url = f"https://open.spotify.com/track/{activity.track_id}"
 		await ctx.send(track_url)
 
-	@commands.command()
-	async def musicsearch(self, ctx, query):
-		videosSearch = VideosSearch(query, limit = 10)
-
-		for i in range(len(videosSearch)):
-			vid = videosSearch.resultComponents[i]
-			await ctx.send(vid['title'])
 
 
 	@commands.Cog.listener()
