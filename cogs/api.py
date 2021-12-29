@@ -400,6 +400,8 @@ class API(commands.Cog):
 	def __init__(self,bot):
 		self.bot = bot
 
+
+
 	@commands.command()
 	async def sub(self, ctx, *, sub):
 		async with aiohttp.ClientSession() as session:

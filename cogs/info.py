@@ -7,6 +7,7 @@ from discord_components import *
 from discord.user import *
 import urllib.parse, urllib.request
 from math import floor
+import psutil
 
 
 HUMANIZED_ACTIVITY = {
