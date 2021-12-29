@@ -242,6 +242,7 @@ class Game(commands.Cog):
 			await ctx.reply(embed=embed_loss, allowed_mentions=discord.AllowedMentions(replied_user=False))
 
 	@commands.command()
+	@commands.cooldown(3, 300, type=BucketType.user)
 	async def trivia(self, ctx, difficulty=None):
 		'''Trivia using the Open Trivia Database'''
 		ez = ['easy', 'medium', 'hard']
@@ -268,7 +269,7 @@ class Game(commands.Cog):
 		try:
 			while True:
 				msg = await self.bot.wait_for('message', timeout=15, check=lambda m: m.author == ctx.message.author)
-				if str(answer) in msg.content:
+				if str(answer) == msg.content:
 					db = sqlite3.connect(
 						r'C:\Users\HP\Desktop\yeetbot\cogs\db\trivia.sqlite', timeout=3)
 					if diffic == 'easy':
@@ -306,6 +307,12 @@ class Game(commands.Cog):
 
 		except asyncio.TimeoutError:
 			await ctx.send(f"`Time ran out!` `{question.answer}` `is the corect answer`")
+
+	@trivia.error
+	async def trivia_error(self, ctx, error):
+		if isinstance(error, commands.CommandOnCooldown):
+			em = discord.Embed(title=f"Command on Cooldown!",description=f"Try again in {error.retry_after:.2f}s.", color=discord.Color.random())
+			await ctx.send(embed=em)
 
 	@commands.command()
 	async def scramble(self,ctx):
@@ -791,7 +798,7 @@ class Game(commands.Cog):
 		cursor = db.cursor()
 		cursor.execute(f"SELECT member_id,score FROM main ORDER BY score DESC")
 		embed = discord.Embed(title='Fight Leaderboard',
-		                      color=discord.Color.random())
+							  color=discord.Color.random())
 		for i, pos in enumerate(cursor, start=1):
 			member_id, score = pos
 
