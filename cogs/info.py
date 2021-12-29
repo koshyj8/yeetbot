@@ -53,7 +53,7 @@ class Information(commands.Cog):
 
 
 			embed.set_author(name=f"{member}'s Information")
-			embed.set_thumbnail(url=member.avatar_url)
+			embed.set_thumbnail(url = member.avatar_url_as)
 
 			embed.add_field(name="Member ID:", value=member.id)
 			embed.add_field(name="Nickname:", value=member.display_name)
