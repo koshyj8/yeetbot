@@ -66,4 +66,4 @@ for filename in os.listdir('./cogs'):
 		client.load_extension(f'cogs.{filename[:-3]}')
 
 
-client.run(S3Connection(os.environ("discord_TOKEN"))
+client.run(os.getenv("discord_TOKEN"))

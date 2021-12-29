@@ -12,7 +12,6 @@ from collections import namedtuple
 import re
 import random
 import re
-from boto.s3.connection import S3Connection
 import os
 import urllib.parse
 import urllib.request
@@ -256,20 +255,20 @@ class quickpaginator(paginator):
 import animec
 from animec import *
 
-API_KEY = S3Connection(os.environ('APIKEY'))
+API_KEY = os.getenv('APIKEY')
 
-search_api = S3Connection(os.environ('SEARCH_API'))
+search_api = os.getenv('SEARCH_API')
 
-app_id = S3Connection(os.environ("WOLFRAM_APP_ID"))
+app_id = os.getenv("WOLFRAM_APP_ID")
 
-reddit = praw.Reddit(client_id=S3Connection(os.environ("REDDIT_CLIENT_ID")),
-					 client_secret=S3Connection(os.environ("REDDIT_CLIENT_SECRET")),
-					 username=S3Connection(os.environ("REDDIT_USERNAME")),
-					 password=S3Connection(os.environ("REDDIT_PASSWORD")),
-					 user_agent=S3Connection(os.environ('REDDIT_USER_AGENT')))
+reddit = praw.Reddit(client_id=os.getenv("REDDIT_CLIENT_ID"),
+					 client_secret=os.getenv("REDDIT_CLIENT_SECRET"),
+					 username=os.getenv("REDDIT_USERNAME"),
+					 password=os.getenv("REDDIT_PASSWORD"),
+					 user_agent=os.getenv('REDDIT_USER_AGENT'))
 
-spaceapi = S3Connection(os.environ("SPACE_API_KEY"))
-api_key = S3Connection(os.environ("TV_API"))
+spaceapi = os.getenv("SPACE_API_KEY")
+api_key = os.getenv("TV_API")
 
 class API(commands.Cog):
 	def __init__(self,bot):
