@@ -11,6 +11,16 @@ import randfacts
 from collections import namedtuple
 import re
 import asyncio
+import random
+import re
+import os
+from dotenv import load_dotenv
+import PIL
+import urllib.parse
+import urllib.request
+
+import animec
+from animec import *
 
 langsi ={"entries": {
 	'af': 'afrikaans',
@@ -123,15 +133,7 @@ langsi ={"entries": {
 
 chatter = False
 
-import random
-import re
-import os
-from dotenv import load_dotenv
-import PIL
-import urllib.parse, urllib.request
 
-import animec
-from animec import *
 load_dotenv()
 
 from typing import List, Union, Optional
@@ -460,6 +462,8 @@ class API(commands.Cog):
 			else:
 				await ctx.send(f"`{response.text}`")
 
+
+
 	@commands.command()
 	async def reddit(self, ctx, *, subreddit):
 		'''Gets posts from Reddit'''
@@ -473,7 +477,7 @@ class API(commands.Cog):
 
 		random_sub = random.choice(all_subs)
 		name = random_sub.title
-		em = discord.Embed(title=name)
+		em = discord.Embed(title=name, color = discord.Color.random())
 		em.set_image(url=random_sub.url)
 		em.add_field(name="Post URL", value=random_sub.url)
 		em.add_field(name='Post Link',

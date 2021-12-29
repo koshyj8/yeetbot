@@ -9,9 +9,8 @@ import random
 from random import randint
 import random
 from discord.ext import commands
-from discord.ext.commands import Context, MemberConverter
-from discord import Client, User, Embed, Colour
-from discord.flags import MemberCacheFlags
+from discord.ext.commands import MemberConverter
+from discord import Embed
 from time import time
 import asyncio
 

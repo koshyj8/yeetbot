@@ -2,7 +2,6 @@ import asyncio
 import discord
 import re
 from discord import utils
-from discord import colour
 from discord.ext import commands
 from discord.ext.commands.converter import MemberConverter
 
@@ -17,8 +16,6 @@ COLORS = {"blue": "🟦", "green": "🟩", "red": "🟥",
 
 NUMBERS = {0: "0️⃣", 1: "1️⃣", 2: "2️⃣", 3: "3️⃣", 4: "4️⃣",
 		   5: "5️⃣", 6: "6️⃣", 7: "7️⃣", 8: "8️⃣", 9: "9️⃣"}
-
-from discord.member import Member
 
 def getGuild(ctx, msg):
 	if msg == '':
