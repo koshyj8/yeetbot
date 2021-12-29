@@ -46,7 +46,7 @@ helikopter==1.0.4
 hpack==3.0.0
 hstspreload==2021.12.1
 httpcore==0.9.1
-httpx==0.13.3
+httpx
 hyperframe==5.2.0
 idna==2.10
 isort==5.5.4
