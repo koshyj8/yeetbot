@@ -23,7 +23,7 @@ import math
 from core.utils.music_utils import *
 
 
-class AudioSourceType(Enum):
+class TypeAudioSource(Enum):
 	SOURCE_UNKNOWN = 0
 	SOURCE_YOUTUBE = 1
 	SOURCE_YANDEXMUSIC = 2
@@ -32,7 +32,7 @@ class AudioSourceType(Enum):
 	SOURCE_SPOTIFY = 5
 
 
-class AudioSourceIdentifier:
+class IdentifyAudioSource:
 	@staticmethod
 	def identify_source(search):
 
@@ -44,33 +44,33 @@ class AudioSourceIdentifier:
 		parsed_url = urlparse(search)
 
 		if any(parsed_url.netloc in s for s in YOUTUBE_DOMAIN_NAMES):
-			return AudioSourceType.SOURCE_YOUTUBE
+			return TypeAudioSource.SOURCE_YOUTUBE
 
 		if any(parsed_url.netloc in s for s in YANDEXMUSIC_DOMAIN_NAMES):
-			return AudioSourceType.SOURCE_YANDEXMUSIC
+			return TypeAudioSource.SOURCE_YANDEXMUSIC
 
 		if any(parsed_url.netloc in s for s in BANDCAMP_DOMAIN_NAMES):
-			return AudioSourceType.SOURCE_BANDCAMP
+			return TypeAudioSource.SOURCE_BANDCAMP
 
 		if any(parsed_url.netloc in s for s in SOUNDCLOUD_DOMAIN_NAMES):
-			return AudioSourceType.SOURCE_SOUNDCLOUD
+			return TypeAudioSource.SOURCE_SOUNDCLOUD
 
 		if any(parsed_url.netloc in s for s in SPOTIFY_DOMAIN_NAMES):
-			return AudioSourceType.SOURCE_SPOTIFY
+			return TypeAudioSource.SOURCE_SPOTIFY
 
-		return AudioSourceType.SOURCE_UNKNOWN
+		return TypeAudioSource.SOURCE_UNKNOWN
 
 
-class AudioSourceFactory:
+class AudioFactory:
 	@staticmethod
 	def provide_source(source_type):
-		if source_type is AudioSourceType.SOURCE_YOUTUBE:
+		if source_type is TypeAudioSource.SOURCE_YOUTUBE:
 			return YTDLSource
-		if source_type is AudioSourceType.SOURCE_UNKNOWN:
+		if source_type is TypeAudioSource.SOURCE_UNKNOWN:
 			return None
 
 
-class SongQueue(asyncio.Queue):
+class PlayerQueue(asyncio.Queue):
 	def __getitem__(self, item):
 		if isinstance(item, slice):
 			return list(itertools.islice(self._queue, item.start, item.stop, item.step))
@@ -243,7 +243,7 @@ class Song:
 		return embed
 
 
-class VoiceStateManager:
+class VoiceStateController:
 	def __init__(self, bot: commands.Bot, ctx):
 		self.bot = bot
 		self._ctx = ctx
@@ -251,7 +251,7 @@ class VoiceStateManager:
 		self.current = None
 		self.voice = None
 		self.next = asyncio.Event()
-		self.songs = SongQueue()
+		self.songs = PlayerQueue()
 
 		self._loop = False
 		self._volume = 0.5

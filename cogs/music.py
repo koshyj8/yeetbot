@@ -35,10 +35,10 @@ class MusicPlayer(commands.Cog, name='Music'):
 		self.bot = bot
 		self.voice_states = {}
 
-	def get_voice_state(self, ctx):
+	def get_user_voice_state(self, ctx):
 		state = self.voice_states.get(ctx.guild.id)
 		if not state:
-			state = VoiceStateManager(self.bot, ctx)
+			state = VoiceStateController(self.bot, ctx)
 			self.voice_states[ctx.guild.id] = state
 
 		return state
@@ -54,7 +54,7 @@ class MusicPlayer(commands.Cog, name='Music'):
 		return True
 
 	async def cog_before_invoke(self, ctx):
-		ctx.voice_state = self.get_voice_state(ctx)
+		ctx.voice_state = self.get_user_voice_state(ctx)
 
 	@commands.command(name='join', invoke_without_subcommand=True)
 	async def _join(self, ctx):
@@ -242,8 +242,8 @@ class MusicPlayer(commands.Cog, name='Music'):
 
 		async with ctx.typing():
 			try:
-				audio_source_type = AudioSourceIdentifier.identify_source(search)
-				audio_source = AudioSourceFactory.provide_source(audio_source_type)
+				audio_source_type = IdentifyAudioSource.identify_source(search)
+				audio_source = AudioFactory.provide_source(audio_source_type)
 				if audio_source is not None:
 					# TODO ?
 					source = await audio_source.create_source(ctx, search, loop=self.bot.loop)
@@ -392,8 +392,8 @@ class MusicPlayer(commands.Cog, name='Music'):
 
 		async with ctx.typing():
 			try:
-				audio_source_type = AudioSourceIdentifier.identify_source(search)
-				audio_source = AudioSourceFactory.provide_source(audio_source_type)
+				audio_source_type = IdentifyAudioSource.identify_source(search)
+				audio_source = AudioFactory.provide_source(audio_source_type)
 				if audio_source is not None:
 					# TODO ?
 					source = await audio_source.create_source(ctx, search, loop=self.bot.loop)
