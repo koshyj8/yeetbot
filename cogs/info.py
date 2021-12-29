@@ -22,8 +22,7 @@ HUMANIZED_ACTIVITY = {
 def humanize_activity(activity_type: discord.ActivityType):
 	return HUMANIZED_ACTIVITY.get(activity_type)
 
-googleapi = 'AIzaSyDTt8PuXgGn8YtJMk6-F7YtpRthclZbF00'
-API_KEY = '336d22fbad9d8795237e2abee2d4c32a'
+
 
 class Information(commands.Cog):
 	'''Commands for information'''
