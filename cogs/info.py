@@ -8,8 +8,9 @@ from discord.user import *
 import urllib.parse, urllib.request
 from math import floor
 import psutil
+import inspect
 
-
+from aiohttp.client import ClientSession
 HUMANIZED_ACTIVITY = {
 	discord.ActivityType.unknown: "Unknown activity",
 	discord.ActivityType.playing: "Playing",
@@ -116,6 +117,20 @@ class Information(commands.Cog):
 		invitelink = await ctx.channel.create_invite(max_age = 90, max_uses=1, unique=True)
 		res = str(invitelink)
 		await ctx.send("`Server Invite Link`", components=[Button(style=ButtonStyle.URL, label="Invite", url=res)])
+
+	@commands.command()
+	async def source(self, ctx, *, command):
+		'''See the source code for any command.'''
+		source = str(inspect.getsource(self.bot.get_command(command).callback))
+		source_code = '```py\n' + source.replace('`', '\u200b`') + '\n```'
+		if len(source_code) > 2000:
+			async with ClientSession() as session:
+				async with session.post("https://hastebin.com/documents", data=source) as resp:
+					data = await resp.json()
+			key = data['key']
+			return await ctx.send(f'<https://hastebin.com/{key}.py>')
+		else:
+			return await ctx.send(source_code)
 
 	@commands.command(aliases=['latency'])
 	async def ping(self, ctx):

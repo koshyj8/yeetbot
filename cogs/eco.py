@@ -18,7 +18,7 @@ class Economy(commands.Cog):
 		user = ctx.author
 		db = sqlite3.connect(r'C:\Users\HP\Desktop\yeetbot\cogs\db\eco.sqlite', timeout=3)
 		cursor = db.cursor()
-		cursor.execute(f"SELECT member_id,server_id FROM main WHERE member_id = {ctx.message.author.id} WHERE server_d = {ctx.guild.id}")
+		cursor.execute(f"SELECT member_id,server_id FROM main WHERE member_id = {ctx.message.author.id} WHERE ctx.author_d = {ctx.guild.id}")
 		result = cursor.fetchone()
 		if result is None:
 			sql = ("INSERT INTO main(member_id,money, server_id) VALUES(?,?,?)")
