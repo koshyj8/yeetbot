@@ -31,8 +31,7 @@ class Information(commands.Cog):
 	async def userinfo(self, ctx, member:MemberConverter = None):
 		'''Get the user's information'''
 
-		if member == None:
-			member=ctx.message.author
+		member = member or ctx.author
 
 		if member.bot==True:
 
@@ -102,6 +101,12 @@ class Information(commands.Cog):
 
 			if member.id == 680773275948679195:
 				await ctx.send("`just kidding he is a bot!`")
+
+	@commands.command()
+	async def avatar(self, ctx, member:MemberConverter = None):
+		member = member or ctx.author
+
+		await ctx.send(member.avatar_url)
 
 	@commands.command()
 	async def github(self, ctx):
