@@ -10,13 +10,9 @@ from praw import reddit
 import randfacts
 from collections import namedtuple
 import re
-import asyncio
-import unicodedata
 import random
 import re
 import os
-from dotenv import load_dotenv
-import PIL
 import urllib.parse
 import urllib.request
 
@@ -25,24 +21,11 @@ from core.utils.pagin import paginator, quickpaginator
 import animec
 from animec import *
 
-
-
 API_KEY = '336d22fbad9d8795237e2abee2d4c32a'
 
 search_api = 'AIzaSyAg2mp9Gv5UlGnLllDm8qrMI6szjyRuCYo'
 
 app_id = os.getenv("WOLFRAM_APP_ID")
-
-def get_reddit():
-	# get the credentials of the reddit user & bot
-	reddit = praw.Reddit(
-		user_agent=os.getenv('REDDIT_USER_AGENT'),
-		username=os.getenv("REDDIT_USERNAME"),
-		password=os.getenv("REDDIT_PASSWORD"),
-		client_id=os.getenv("REDDIT_CLIENT_ID"), 
-		client_secret=os.getenv("REDDIT_CLIENT_SECRET"),
-	)
-	return reddit
 
 reddit = praw.Reddit(client_id=os.getenv("REDDIT_CLIENT_ID"),
 					 client_secret=os.getenv("REDDIT_CLIENT_SECRET"),
@@ -114,8 +97,6 @@ class API(commands.Cog):
 				await ctx.send(f"{response.text}")
 			else:
 				await ctx.send(f"`{response.text}`")
-
-
 
 	@commands.command()
 	async def reddit(self, ctx, *, subreddit):
@@ -224,8 +205,6 @@ class API(commands.Cog):
 					fact = file['text']
 					await ctx.send(f"`{fact}`")
 
-
-
 	@commands.command(aliases=['xkcd', 'com'])
 	async def comic(self, ctx):
 		'''Get a comic from xkcd.'''
@@ -243,8 +222,6 @@ class API(commands.Cog):
 			text=f"Published on {data['month']}/{data['day']}/{data['year']}")
 		em.set_image(url=data['img'])
 		await ctx.send(embed=em)
-
-
 
 	@commands.command()
 	async def pypi(self, ctx, pkg: str):
