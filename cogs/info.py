@@ -22,8 +22,6 @@ HUMANIZED_ACTIVITY = {
 def humanize_activity(activity_type: discord.ActivityType):
 	return HUMANIZED_ACTIVITY.get(activity_type)
 
-
-
 class Information(commands.Cog):
 	'''Commands for information'''
 	def __init__(self,bot):

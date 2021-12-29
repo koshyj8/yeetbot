@@ -21,9 +21,9 @@ from core.utils.pagin import paginator, quickpaginator
 import animec
 from animec import *
 
-API_KEY = '336d22fbad9d8795237e2abee2d4c32a'
+API_KEY = os.getenv('APIKEY')
 
-search_api = 'AIzaSyAg2mp9Gv5UlGnLllDm8qrMI6szjyRuCYo'
+search_api = os.getenv('SEARCH_API')
 
 app_id = os.getenv("WOLFRAM_APP_ID")
 
