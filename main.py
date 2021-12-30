@@ -50,8 +50,8 @@ async def reload(ctx, extension):
 async def on_ready():
     print('Bot ready.')
 
-    watcher = Watcher(client, path='cogs')
-    await watcher.start()
+   # watcher = Watcher(client, path='cogs')
+    #await watcher.start()
 
 
 @client.command()

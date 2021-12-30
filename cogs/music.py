@@ -4,7 +4,6 @@ import asyncio
 from discord.ext.commands.converter import MemberConverter
 import youtube_dl
 import os
-from youtubesearchpython import VideosSearch
 from discord.ext import commands
 import aiohttp
 from discord import Spotify

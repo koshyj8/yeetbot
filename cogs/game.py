@@ -10,9 +10,10 @@ from random import randint
 import random
 from discord.ext import commands
 from discord.ext.commands import MemberConverter
-from discord import Embed
 from time import time
 import asyncio
+
+from PIL import *
 
 import asyncio
 import random
