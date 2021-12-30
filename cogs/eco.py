@@ -1,434 +1,530 @@
 import discord
+import random
+import os
 from discord.ext import commands
-from discord.ext.commands import cooldown, BucketType
-import aiosqlite
-from random import *
+import json
+
+with open('./database/shop.json') as f:
+    mainshop = json.load(f)
+
+
+async def get_bank_data():
+    with open('./database/economy.json', 'r') as f:
+        users = json.load(f)
+
+    return users
+
+
+async def open_account(user):
+
+    users = await get_bank_data()
+
+    if str(user.id) in users:
+        return False
+    else:
+        users[str(user.id)] = {}
+        users[str(user.id)]["wallet"] = 0
+        users[str(user.id)]["bank"] = 0
+    with open('./database/economy.json', 'w') as f:
+        json.dump(users, f, indent=4)
+    return True
+
+
+def conv2num(amount):
+    lenght = 0
+    for i in amount:
+        lenght += 1
+    lenght -= 1
+
+    last_letter = amount[lenght]
+
+    rest = amount[:-1]
+
+    try:
+        rest = int(rest)
+        if last_letter.lower() == "k":
+            amount = rest*1000
+
+        elif last_letter.lower() == "m":
+            amount = rest*1000000
+
+    except:
+        print("Not a number")
+
+    return amount
+
+
+async def update_bank(user, change=0, mode='wallet'):
+    users = await get_bank_data()
+
+    users[str(user.id)][mode] += change
+
+    with open('./database/economy.json', 'w') as f:
+        json.dump(users, f, indent=4)
+    bal = users[str(user.id)]['wallet'], users[str(user.id)]['bank']
+    return bal
+
+
+async def sell_this(user, item_name, amount, price=None):
+    item_name = item_name.lower()
+    name_ = None
+    for item in mainshop:
+        name = item["name"].lower()
+        if name == item_name:
+            name_ = name
+            if price == None:
+                price = 0.7 * item["price"]
+            if item['sell'] == False:
+                return
+            break
+
+    if name_ == None:
+        return [False, 1]
+
+    cost = price*amount
+
+    users = await get_bank_data()
+
+    bal = await update_bank(user)
+
+    try:
+        index = 0
+        t = None
+        for thing in users[str(user.id)]["bag"]:
+            n = thing["item"]
+            if n == item_name:
+                old_amt = thing["amount"]
+                new_amt = old_amt - amount
+                if new_amt < 0:
+                    return [False, 2]
+                users[str(user.id)]["bag"][index]["amount"] = new_amt
+                t = 1
+                break
+            index += 1
+        if t == None:
+            return [False, 3]
+    except:
+        return [False, 3]
+    for item in users[str(user.id)]["bag"]:
+        if item["amount"] == 0:
+            users[str(user.id)]["bag"].remove(item)
+    with open("./database/economy.json", "w") as f:
+        json.dump(users, f, indent=4)
+    await update_bank(user, cost, "wallet")
+
+    return [True, "Worked"]
+
+
+async def buy_this(user, amount, item_name):
+    item_name = item_name.lower()
+    name_ = None
+    for item in mainshop:
+        name = item["name"].lower()
+        if name == item_name:
+            name_ = name
+            price = item["price"]
+            break
+
+    if name_ == None:
+        return [False, 1]
+
+    cost = price*amount
+
+    users = await get_bank_data()
+
+    bal = await update_bank(user)
+
+    if bal[0] < cost:
+        return [False, 2]
+
+    try:
+        index = 0
+        t = None
+        for thing in users[str(user.id)]["bag"]:
+            n = thing["item"]
+            if n == item_name:
+                old_amt = thing["amount"]
+                new_amt = old_amt + amount
+                users[str(user.id)]["bag"][index]["amount"] = new_amt
+                t = 1
+                break
+            index += 1
+        if t == None:
+            obj = {"item": item_name, "amount": amount}
+            users[str(user.id)]["bag"].append(obj)
+    except:
+        obj = {"item": item_name, "amount": amount}
+        users[str(user.id)]["bag"] = [obj]
+    with open("./database/economy.json", "w") as f:
+        json.dump(users, f, indent=4)
+
+    await update_bank(user, cost*-1, "wallet")
+
+    return [True, "Worked"]
+
 
 class Economy(commands.Cog):
-    """Economy which are related to economy! :D"""
     def __init__(self, client):
         self.client = client
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        print('Economy are ready!')
-        async with aiosqlite.connect("cogs\db\eco.sqlite") as connection:
-            async with connection.cursor() as cursor:
-                await cursor.execute("CREATE TABLE IF NOT EXISTS users (userid INTEGER, bank INTEGER, wallet INTEGER);")
-                await connection.commit()
-
     @commands.command(aliases=['bal'])
-    @cooldown(1, 5, BucketType.channel)
-    async def balance(self, ctx, member : discord.Member= None):
-        if member == None:
-            member = ctx.author
-        async with aiosqlite.connect("cogs\db\eco.sqlite") as connection:
-            async with connection.cursor() as cursor:
-                await cursor.execute("SELECT * FROM users WHERE userid = ?",(member.id,))
-                rows = await cursor.fetchone()
-                if not rows:
-                    await cursor.execute("INSERT INTO users (userid, bank, wallet) VALUES (?,?,?)",(member.id,0,0))
-                    await cursor.execute("SELECT * FROM users WHERE userid = ?",(member.id,))
-                    rows = await cursor.fetchone()
-                await connection.commit()
-                em = discord.Embed(title = f"<:success:761297849475399710> {member.name}'s Balance", color = ctx.author.color)
-                em.add_field(name = ":dollar: Wallet Balance:", value = f"{rows[2]} :coin:")
-                em.add_field(name = ":bank: Bank Balance:", value = f"{rows[1]} :coin:")
-                em.set_thumbnail(url = member.avatar_url)
-                await ctx.send(embed=em)
+    async def balance(self, ctx, person: discord.Member = None):
+        print(person)
+        if person == None:
+            print(ctx.author)
+            await open_account(ctx.author)
+            user = ctx.author
 
-    @commands.command(aliases=['dep'])
-    @commands.cooldown(1,5,commands.BucketType.user)
-    async def deposit(self,ctx,amount = None):
-        if amount == None:
-            em = discord.Embed(title = "Deposit failed!", color = ctx.author.color)
-            em.add_field(name = "Reason:", value = "Specify an amount!")
-            em.add_field(name = "Next Steps:", value = "Next time try to type an amount too!")
-            em.set_thumbnail(url = ctx.author.avatar_url)
-            await ctx.send(embed = em)
-            return
+            users = await get_bank_data()
 
-        if amount != "all" or amount != "max":
-            amount = int(amount)
+            wallet_amt = users[str(user.id)]["wallet"]
+            bank_amt = users[str(user.id)]["bank"]
 
-        async with aiosqlite.connect("cogs\db\eco.sqlite") as connection:
-            async with connection.cursor() as cursor:
-                await cursor.execute("SELECT bank, wallet FROM users WHERE userid = ?",(ctx.author.id,))
-                rows = await cursor.fetchone()
-                if not rows:
-                    await cursor.execute("INSERT INTO users (userid, bank, wallet) VALUES (?,?,?)",(ctx.author.id,0,0,''))
-                else:
-                    if amount != 'all' or amount != "max":
-                        if amount > rows[1]:
-                            em = discord.Embed(title = "Deposit failed!", color = ctx.author.color)
-                            em.add_field(name = "Reason:", value = "You don't even have that much money!")
-                            em.add_field(name = "Next Steps:", value = "Get richer next time!")
-                            em.set_thumbnail(url = ctx.author.avatar_url)
-                            await ctx.send(embed = em)
-                            return
-                        elif amount <= 0:
-                            em = discord.Embed(title = "Deposit failed!", color = ctx.author.color)
-                            em.add_field(name = "Reason:", value = "Amount was too low!")
-                            em.add_field(name = "Next Steps:", value = "Type a positive integer next time!")
-                            em.set_thumbnail(url = ctx.author.avatar_url)
-                            await ctx.send(embed = em)
-                            return
-                        else:
-                            await cursor.execute("UPDATE users SET wallet = ?, bank = ? WHERE userid = ?",(rows[1] - amount,rows[0] + amount,ctx.author.id,))
-                            em = discord.Embed(title = "<:success:761297849475399710> Deposit successful!", color = ctx.author.color)
-                            em.add_field(name = ":bank: Amount Deposited:", value = f"{amount} :coin:")
-                            em.set_thumbnail(url = ctx.author.avatar_url)
-                            await ctx.send(embed = em)
-                    else:
-                        await cursor.execute("UPDATE users SET wallet = ?, bank = ? WHERE userid = ?",(0,rows[0] + rows[1],ctx.author.id,))
-                        em = discord.Embed(title = "<:success:761297849475399710> Deposit successful!", color = ctx.author.color)
-                        em.add_field(name = ":bank: Amount Deposited:", value = f"{rows[1]} :coin:")
-                        em.set_thumbnail(url = ctx.author.avatar_url)
-                        await ctx.send(embed = em)
-                    await connection.commit()
+            # round
+            wallet_amt = round(wallet_amt, 2)
+            bank_amt = round(bank_amt, 2)
+
+            wallet_amt = "{:,}".format(wallet_amt)
+            bank_amt = "{:,}".format(bank_amt)
+
+            em = discord.Embed(
+                title=f'{ctx.author.name} Balance', color=discord.Color.red())
+            em.add_field(name="Wallet Balance", value=wallet_amt)
+            em.add_field(name='Bank Balance', value=bank_amt)
+            await ctx.send(embed=em)
+        else:
+            await open_account(person)
+            user = person
+
+            users = await get_bank_data()
+
+            wallet_amt = users[str(user.id)]["wallet"]
+            bank_amt = users[str(user.id)]["bank"]
+
+            # round
+            wallet_amt = round(wallet_amt, 2)
+            bank_amt = round(bank_amt, 2)
+
+            wallet_amt = "{:,}".format(wallet_amt)
+            bank_amt = "{:,}".format(bank_amt)
+
+            em = discord.Embed(
+                title=f'{person.name} Balance', color=discord.Color.red())
+            em.add_field(name="Wallet Balance", value=wallet_amt)
+            em.add_field(name='Bank Balance', value=bank_amt)
+            await ctx.send(embed=em)
+
+    """@commands.command()
+    @commands.cooldown(1, 30, commands.BucketType.user)
+    async def beg(self, ctx):
+        await open_account(ctx.author)
+        user = ctx.author
+
+        users = await get_bank_data()
+
+        earnings = random.randrange(101)
+
+        await ctx.send(embed=discord.Embed(title=f'{ctx.author} you spent time on the streets begging.', description=f'Got `{earnings}` coins!!'))
+
+        users[str(user.id)]["wallet"] += earnings
+        with open("./database/economy.json", 'w') as f:
+            json.dump(users, f, indent=4)"""
+
+    @commands.command()
+    @commands.cooldown(1, 60*1440, commands.BucketType.user)
+    async def daily(self, ctx):
+        await open_account(ctx.author)
+        user = ctx.author
+
+        users = await get_bank_data()
+
+        earnings = 2000
+
+        await ctx.send(embed=discord.Embed(title=f'{ctx.author}', description='Got `{:,}` coins!!'.format(earnings)))
+
+        users[str(user.id)]["wallet"] += earnings
+        with open("./database/economy.json", 'w') as f:
+            json.dump(users, f, indent=4)
 
     @commands.command(aliases=['with'])
-    @commands.cooldown(1,5,commands.BucketType.user)
-    async def withdraw(self,ctx,amount = None):
+    async def withdraw(self, ctx, amount=None):
+        await open_account(ctx.author)
         if amount == None:
-            em = discord.Embed(title = "Withdraw failed!", color = ctx.author.color)
-            em.add_field(name = "Reason:", value = "Specify an amount!")
-            em.add_field(name = "Next Steps:", value = "Next time try to type an amount too!")
-            em.set_thumbnail(url = ctx.author.avatar_url)
-            await ctx.send(embed = em)
+            await ctx.send("Please enter the amount")
             return
 
-        if not amount == 'all':
+        user = ctx.author
+
+        users = await get_bank_data()
+
+        wallet = users[str(user.id)]["wallet"]
+        bank = users[str(user.id)]["bank"]
+
+        try:
             amount = int(amount)
-        async with aiosqlite.connect("cogs\db\eco.sqlite") as connection:
-            async with connection.cursor() as cursor:
-                await cursor.execute("SELECT bank, wallet FROM users WHERE userid = ?",(ctx.author.id,))
-                rows = await cursor.fetchone()
-                if not rows:
-                    await cursor.execute("INSERT INTO users (userid, bank, wallet) VALUES (?,?,?)",(ctx.author.id,0,0,))
-                else:
-                    if not amount == 'all':
-                        if amount > rows[0]:
-                            em = discord.Embed(title = "Withdraw failed!", color = ctx.author.color)
-                            em.add_field(name = "Reason:", value = "You don't even have that much money!")
-                            em.add_field(name = "Next Steps:", value = "Get richer next time!")
-                            em.set_thumbnail(url = ctx.author.avatar_url)
-                            await ctx.send(embed = em)
-                            return
-                        elif amount <= 0:
-                            em = discord.Embed(title = "Withdraw failed!", color = ctx.author.color)
-                            em.add_field(name = "Reason:", value = "Amount was too low!")
-                            em.add_field(name = "Next Steps:", value = "Type a positive integer next time!")
-                            em.set_thumbnail(url = ctx.author.avatar_url)
-                            await ctx.send(embed = em)
-                            return
-                        else:
-                            await cursor.execute("UPDATE users SET wallet = ?, bank = ? WHERE userid = ?",(rows[1] + amount,rows[0] - amount,ctx.author.id,))
-                            em = discord.Embed(title = "<:success:761297849475399710> Withdraw successful!", color = ctx.author.color)
-                            em.add_field(name = ":dollar: Amount Withdrawn:", value = f"{amount} :coin:")
-                            em.set_thumbnail(url = ctx.author.avatar_url)
-                            await ctx.send(embed = em)
-                    else:
-                        await cursor.execute("UPDATE users SET wallet = ?, bank = ? WHERE userid = ?",(rows[1] + rows[0],0,ctx.author.id,))
-                        em = discord.Embed(title = "<:success:761297849475399710> Withdraw successful!", color = ctx.author.color)
-                        em.add_field(name = ":dollar: Amount Withdrawn:", value = f"{rows[0]} :coin:")
-                        em.set_thumbnail(url = ctx.author.avatar_url)
-                        await ctx.send(embed = em)
-                await connection.commit()
 
-    @commands.command(aliases=['send', "share"])
-    @commands.cooldown(1,30,commands.BucketType.user)
-    async def give(self,ctx,member : discord.Member = None, amount = None):
-        if amount == None:
-            em = discord.Embed(title = "Give failed!", color = ctx.author.color)
-            em.add_field(name = "Reason:", value = "Specify an amount!")
-            em.add_field(name = "Next Steps:", value = "Next time try to type an amount too!")
-            em.set_thumbnail(url = ctx.author.avatar_url)
-            await ctx.send(embed = em)
-            return
-        if member is None:
-            em = discord.Embed(title = "Give failed!", color = ctx.author.color)
-            em.add_field(name = "Reason:", value = "Mention a valid user.")
-            em.add_field(name = "Next Steps:", value = "Next time try to type a valid member too!")
-            em.set_thumbnail(url = ctx.author.avatar_url)
-            await ctx.send(embed = em)
-            return
+        except:
+            if amount.lower() == "max":
+                amount = bank
+
+            elif amount.lower() == "all":
+                amount = bank
+
+            else:
+                amount = conv2num(amount)
+
+        bal = await update_bank(ctx.author)
 
         amount = int(amount)
-        
-        async with aiosqlite.connect("cogs\db\eco.sqlite") as connection:
-            async with connection.cursor() as cursor:
-                await cursor.execute("SELECT bank, wallet FROM users WHERE userid = ?", (ctx.author.id))
-                bal = await cursor.fetchone()
 
-                if not bal:
-                    return await ctx.send("bruh, you've never even played-")
-
-                if bal[1] < amount:
-                    return await ctx.send("You don't even have that much money!")
-                
-                if amount == 0 or amount < 0:
-                    await ctx.send("Amount must be positive!")
-                    return
-                
-                em = discord.Embed(title = "<:success:761297849475399710> Give successful!", color = ctx.author.color)
-                em.add_field(name = ":dollar: Amount Given:", value = f"{amount} :coin:")
-                em.add_field(name ="Member:", value = f"{member.mention}")
-                em.add_field(name = ":tada: Money:", value = "Give your money! :tada:")
-                await ctx.send(embed = em)
-
-                await cursor.execute("UPDATE users SET wallet = ?, bank = ? WHERE userid = ?", (bal[1] - amount, bal[0], ctx.author.id))
-                await connection.commit()
-
-        async with aiosqlite.connect("cogs\db\eco.sqlite") as connection:
-            async with connection.cursor() as cursor:
-                await cursor.execute("SELECT bank, wallet FROM users WHERE userid = ?", (member.id))
-                rows = await cursor.fetchone()
-
-                await cursor.execute("UPDATE users SET wallet = ?, bank = ?, WHERE userid = ?", (rows[1] + amount, rows[0], member.id))
-                await connection.commit()
-
-    # error handling
-    @give.error
-    async def give_error(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            em = discord.Embed(title = f"Command On Cooldown!", color = ctx.author.color)
-            em.add_field(name = f"Reason:", value = f"Stop giving money it makes you poor!")
-            em.add_field(name = "Try again in:", value = "{:.2f} seconds".format(error.retry_after))
-            em.set_thumbnail(url = ctx.author.avatar_url)
-            await ctx.send(embed = em)
-        if isinstance(error, commands.BadArgument):
-            em = discord.Embed(title = f"Error", color = ctx.author.color)
-            em.add_field(name = f"Reason:", value = f"Arguments were of the wrong data type!")
-            em.add_field(name = "Args", value = "```\nimp give <@user> <amount>\n```")
-            em.set_thumbnail(url = ctx.author.avatar_url)
-            await ctx.send(embed = em)
-        if isinstance(error, commands.MissingRequiredArgument):
-            em = discord.Embed(title = f"Error", color = ctx.author.color)
-            em.add_field(name = f"Reason:", value = f"You didn't provide the right arguments!")
-            em.add_field(name = "Args", value = "```\nimp give <@user> <amount>\n```")
-            em.set_thumbnail(url = ctx.author.avatar_url)
-            await ctx.send(embed = em)
-
-    @withdraw.error
-    async def withdraw_error(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            em = discord.Embed(title = f"Command On Cooldown!", color = ctx.author.color)
-            em.add_field(name = f"Reason:", value = "You can always withdraw later idiot!")
-            em.add_field(name = "Try again in:", value = "{:.2f} seconds".format(error.retry_after))
-            em.set_thumbnail(url = ctx.author.avatar_url)
-            await ctx.send(embed = em)
-        if isinstance(error, commands.BadArgument):
-            em = discord.Embed(title = f"Withdraw Error", color = ctx.author.color)
-            em.add_field(name = f"Reason:", value = f"Arguments were of the wrong data type!")
-            em.add_field(name = "Args", value = "```\nimp with <amount>\n```")
-            em.set_thumbnail(url = ctx.author.avatar_url)
-            await ctx.send(embed = em)
-        if isinstance(error, commands.MissingRequiredArgument):
-            em = discord.Embed(title = f"Withdraw Error", color = ctx.author.color)
-            em.add_field(name = f"Reason:", value = f"You didn't provide the right arguments!")
-            em.add_field(name = "Args", value = "```\nimp with <amount>\n```")
-            em.set_thumbnail(url = ctx.author.avatar_url)
-            await ctx.send(embed = em)
-
-
-    @balance.error
-    async def balance_error(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            em = discord.Embed(title = f"Command On Cooldown!", color = ctx.author.color)
-            em.add_field(name = f"Reason:", value = "Check it later, money doesn't matter. Adding me to your server does \:D")
-            em.add_field(name = "Try again in:", value = "{:.2f} seconds".format(error.retry_after))
-            em.set_thumbnail(url = ctx.author.avatar_url)
-            await ctx.send(embed = em)
-        
-        if isinstance(error, commands.BadArgument):
-            em = discord.Embed(title = f"Balance Error", color = ctx.author.color)
-            em.add_field(name = f"Reason:", value = f"Arguments were of the wrong data type!")
-            em.add_field(name = "Args", value = "```\nimp balance [@user]\n```")
-            em.set_thumbnail(url = ctx.author.avatar_url)
-            await ctx.send(embed = em)
-
-
-    @deposit.error
-    async def deposit_error(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            em = discord.Embed(title = f"Command On Cooldown!", color = ctx.author.color)
-            em.add_field(name = f"Reason:", value = "You can always deposit later idiot!")
-            em.add_field(name = "Try again in:", value = "{:.2f} seconds".format(error.retry_after))
-            em.set_thumbnail(url = ctx.author.avatar_url)
-            await ctx.send(embed = em)
-        if isinstance(error, commands.BadArgument):
-            em = discord.Embed(title = f"Deposit Error", color = ctx.author.color)
-            em.add_field(name = f"Reason:", value = f"Arguments were of the wrong data type!")
-            em.add_field(name = "Args", value = "```\nimp deposit <amount>\n```")
-            em.set_thumbnail(url = ctx.author.avatar_url)
-            await ctx.send(embed = em)
-        if isinstance(error, commands.MissingRequiredArgument):
-            em = discord.Embed(title = f"Deposit Error", color = ctx.author.color)
-            em.add_field(name = f"Reason:", value = f"You didn't provide the right arguments!")
-            em.add_field(name = "Args", value = "```\nimp dep <amount>\n```")
-            em.set_thumbnail(url = ctx.author.avatar_url)
-            await ctx.send(embed = em)
-
-    @commands.command()
-    @commands.cooldown(1,15,commands.BucketType.user)
-    async def beg(self, ctx):
-        earnings = randint(
-        1, 100
-        )
-        async with aiosqlite.connect("./data/economy.db") as connection:
-            async with connection.cursor() as cursor:
-                await cursor.execute("SELECT bank, wallet FROM users WHERE userid = ?",(ctx.author.id,))
-                rows = await cursor.fetchone()
-                if not rows:
-                    await cursor.execute("INSERT INTO users (userid, bank, wallet) VALUES (?,?,?)",(ctx.author.id,0,0))
-                    await connection.commit()
-                await cursor.execute("UPDATE users SET wallet = ?, bank = ? WHERE userid = ?",(rows[1] + earnings, rows[0], ctx.author.id))
-                rows = await cursor.fetchone()
-                await connection.commit()
-                em = discord.Embed(title = f"<:success:761297849475399710> {ctx.author.name} begs hard!", color = ctx.author.color)
-                em.add_field(name = ":coin: Earnings", value = f"{earnings} :coin:", inline = False)
-                em.set_thumbnail(url = ctx.author.avatar_url)
-                em.set_author(name = ctx.author.name, icon_url = ctx.author.avatar_url)
-                await ctx.send(embed=em)
-
-    @commands.command()
-    @commands.is_owner()
-    @commands.cooldown(1, 300, commands.BucketType.user)
-    async def devwith(self, ctx, amount = None):
-        if amount is None:
-            await ctx.send("Type an amount!")
+        if amount > bal[1]:
+            await ctx.send('You do not have sufficient balance')
             return
-        if not amount == 'all':
+        if amount < 0:
+            await ctx.send('Amount must be positive!')
+            return
+
+        await update_bank(ctx.author, amount)
+        await update_bank(ctx.author, -1*amount, 'bank')
+        await ctx.send('{} You withdrew {:,} coins'.format(ctx.author, amount))
+
+    @commands.command(aliases=['dep'])
+    async def deposit(self, ctx, amount=None):
+        await open_account(ctx.author)
+        if amount == None:
+            await ctx.send("Please enter the amount")
+            return
+
+        user = ctx.author
+
+        users = await get_bank_data()
+
+        wallet = users[str(user.id)]["wallet"]
+        bank = users[str(user.id)]["bank"]
+
+        try:
             amount = int(amount)
-        async with aiosqlite.connect("./data/economy.db") as connection:
-            async with connection.cursor() as cursor:
-                await cursor.execute("SELECT bank, wallet FROM users WHERE userid = ?",(ctx.author.id,))
-                rows = await cursor.fetchone()
-                if not rows:
-                    await cursor.execute("INSERT INTO users (userid, bank, wallet) VALUES (?,?,?)",(ctx.author.id,0,0,))
-                else:
-                    if not amount == 'all':
-                        await cursor.execute("UPDATE users SET wallet = ?, bank = ? WHERE userid = ?", (rows[1] + amount, rows[0], ctx.author.id))
-            await connection.commit()
-        await ctx.send(f"Gave you {amount} :dollar:")
+
+        except:
+            if amount.lower() == "max":
+                amount = wallet
+
+            elif amount.lower() == "all":
+                amount = wallet
+
+            else:
+                amount = conv2num(amount)
+
+        bal = await update_bank(ctx.author)
+
+        amount = int(amount)
+
+        if amount > bal[0]:
+            await ctx.send('You do not have sufficient balance')
+            return
+        if amount < 0:
+            await ctx.send('Amount must be positive!')
+            return
+
+        await update_bank(ctx.author, -1*amount)
+        await update_bank(ctx.author, amount, 'bank')
+        await ctx.send('{} You deposited {:,} coins'.format(ctx.author, amount))
+
+    @commands.command(aliases=['sm', 'donate', 'give'])
+    async def send(self, ctx, member: discord.Member, amount=None):
+        await open_account(ctx.author)
+        await open_account(member)
+        if amount == None:
+            await ctx.send("Please enter the amount i havent got all day")
+            return
+        try:
+            amount = int(amount)
+        except:
+            amount = conv2num(amount)
+
+        bal = await update_bank(ctx.author)
+        if amount == 'all':
+            amount = bal[0]
+
+        amount = int(amount)
+
+        if amount > bal[1]:
+            await ctx.send('Get some more coins\nYou do not have sufficient balance in your banl')
+            return
+        if amount < 0:
+            await ctx.send('Amount must be positive!')
+            return
+
+        await update_bank(ctx.author, -1*amount, 'bank')
+        await update_bank(member, amount, 'wallet')
+        await ctx.send(f'{ctx.author} You gave {member} `{amount}` coins')
+
+    @commands.command(aliases=['rb', 'steal'])
+    @commands.cooldown(1, 30, commands.BucketType.user)
+    async def rob(self, ctx, member: discord.Member):
+        await open_account(ctx.author)
+        await open_account(member)
+        bal = await update_bank(member)
+
+        if bal[0] < 100:
+            await ctx.send('It is useless to rob them :(\nThey dont even have 100 coins')
+            return
+
+        earning = random.randrange(0, bal[0])
+
+        await update_bank(ctx.author, earning)
+        await update_bank(member, -1*earning)
+        await ctx.send(f'{ctx.author} You robbed {member} and got `{earning}` coins')
 
     @commands.command()
-    @cooldown(1, 86400, BucketType.user)
-    async def daily(self, ctx):
-        earnings = 2000
-        async with aiosqlite.connect("./data/economy.db") as connection:
-            async with connection.cursor() as cursor:
-                await cursor.execute("SELECT bank, wallet FROM users WHERE userid = ?",(ctx.author.id,))
-                rows = await cursor.fetchone()
-                if not rows:
-                    await cursor.execute("INSERT INTO users (userid, bank, wallet) VALUES (?,?,?)",(ctx.author.id,0,0))
-                await cursor.execute("UPDATE users SET wallet = ?, bank = ? WHERE userid = ?",(rows[1] + earnings, rows[0], ctx.author.id))
-                rows = await cursor.fetchone()
-                await connection.commit()
-                em = discord.Embed(title = f"<:success:761297849475399710> {ctx.author.name} begs hard!", color = ctx.author.color)
-                em.add_field(name = ":dollar: Earnings", value = f"{earnings} :coin:", inline = False)
-                em.add_field(name = ":tada: Free prize:", value = "Once a day you can claim a free price!")
-                em.set_author(name = ctx.author.name, icon_url = ctx.author.avatar_url)
-                em.set_thumbnail(url = ctx.author.avatar_url)
-                await ctx.send(embed=em)
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    async def gamble(self, ctx, amount=None):
+        await open_account(ctx.author)
+        if amount == None:
+            await ctx.send("Please enter the amount")
+            return
+        bal = await update_bank(ctx.author)
+
+        user = ctx.author
+
+        users = await get_bank_data()
+
+        wallet = users[str(user.id)]["wallet"]
+        bank = users[str(user.id)]["bank"]
+
+        try:
+            amount = int(amount)
+
+        except:
+            if amount.lower() == "max":
+                amount = wallet
+
+            elif amount.lower() == "all":
+                amount = wallet
+
+            else:
+                amount = conv2num(amount)
+
+        if amount > bal[0]:
+            await ctx.send('You do not have sufficient balance')
+            return
+        if amount < 0:
+            await ctx.send('Amount must be positive!')
+            return
+
+        win = False
+        num = random.randint(1, 3)
+        if num == 2:
+            win = True
+
+        if win == True:
+            await update_bank(ctx.author, 2*amount)
+            await ctx.send(f'{ctx.author} You won :) `{2*amount}`')
+        else:
+            await update_bank(ctx.author, -1*amount)
+            await ctx.send(f'{ctx.author} You lose :( `{amount}`')
 
     @commands.command()
-    @commands.cooldown(1,30,commands.BucketType.user)
-    async def serve(self, ctx):
-        earnings = randint(
-        1, 500
-        )
-        async with aiosqlite.connect("./data/economy.db") as connection:
-            async with connection.cursor() as cursor:
-                await cursor.execute("SELECT bank, wallet FROM users WHERE userid = ?",(ctx.author.id,))
-                rows = await cursor.fetchone()
-                if not rows:
-                    await cursor.execute("INSERT INTO users (userid, bank, wallet) VALUES (?,?,?)",(ctx.author.id,0,0))
-                await cursor.execute("UPDATE users SET wallet = ?, bank = ? WHERE userid = ?",(rows[1] + earnings, rows[0], ctx.author.id))
-                rows = await cursor.fetchone()
-                await connection.commit()
-                em = discord.Embed(title = f"<:success:761297849475399710> {ctx.author.name} serves their server!", color = ctx.author.color)
-                em.add_field(name = ":coin: Earnings", value = f"{earnings} :coin:", inline = False)
-                em.add_field(name = "Server:", value = f"{ctx.guild.name}")
-                em.set_thumbnail(url = ctx.author.avatar_url)
-                em.set_author(name = ctx.author.name, icon_url = ctx.author.avatar_url)
-                await ctx.send(embed=em)
+    async def shop(self, ctx, *, item_=None):
+        img = None
+        if item_ == None:
+            em = discord.Embed(title="Shop")
 
+            for item in mainshop:
+                name = item["name"]
+                price = item["price"]
+                price = "{:,}".format(price)
+                desc = item["description"]
+                buy = item['buy']
+                if buy == True:
+                    em.add_field(name=f"**{name}**", value=f"$`{price}`")
+        else:
+            em = discord.Embed(title="Shop")
+            inshop = False
+            for item in mainshop:
+                if item["name"].lower() == item_.lower():
+                    name = item["name"]
+                    price = item["price"]
+                    price = "{:,}".format(price)
+                    sell = float(item["price"])*0.7
+                    sell = "{:,}".format(sell)
+                    desc = item["description"]
+                    buy = item['buy']
+                    em.add_field(
+                        name=f"**Item Name/Id: {name}**", value=f"Buy: $`{price}`\nSell: $`{sell}`\n{desc}")
+                    if item["icon_path"] == None:
+                        img = None
+                    else:
+                        img = True
+                        file = discord.File(
+                            f"./shopimages/{item['icon_path']}")
+                        em.set_thumbnail(
+                            url=f"attachment://./shopimages/{item['icon_path']}")
+                    inshop = True
+                    break
+            if inshop == False:
+                em.add_field(name=item_, value="Item not in shop")
+        if img == None:
+            await ctx.send(embed=em)
+        if img == True:
+            await ctx.send(file=file, embed=em)
+
+    @commands.command(aliases=['purchase'])
+    async def buy(self, ctx, amount=1, *, item=None):
+
+        await open_account(ctx.author)
+
+        res = await buy_this(ctx.author, amount, item)
+
+        if not res[0]:
+            if res[1] == 1:
+                await ctx.send("That Object isn't there!")
+                return
+            if res[1] == 2:
+                await ctx.send(f"You don't have enough coins in your wallet to buy {amount} {item}")
+                return
+
+        await ctx.send(f"You just bought {amount} {item}")
+
+    @commands.command(aliases=['inv', 'inventory'])
+    async def bag(self, ctx):
+        await open_account(ctx.author)
+        user = ctx.author
+        users = await get_bank_data()
+
+        try:
+            bag = users[str(user.id)]["bag"]
+        except:
+            bag = []
+
+        em = discord.Embed(title="Bag")
+        for item in bag:
+            name = item["item"]
+            amount = item["amount"]
+
+            em.add_field(name=name, value=amount)
+
+        await ctx.send(embed=em)
 
     @commands.command()
-    @cooldown(1, 604800, BucketType.user)
-    async def weekly(self, ctx):
-        earnings = 15000
-        async with aiosqlite.connect("./data/economy.db") as connection:
-            async with connection.cursor() as cursor:
-                await cursor.execute("SELECT bank, wallet FROM users WHERE userid = ?",(ctx.author.id,))
-                rows = await cursor.fetchone()
-                if not rows:
-                    await cursor.execute("INSERT INTO users (userid, bank, wallet) VALUES (?,?,?)",(ctx.author.id,0,0))
-                await cursor.execute("UPDATE users SET wallet = ?, bank = ? WHERE userid = ?",(rows[1] + earnings, rows[0], ctx.author.id))
-                rows = await cursor.fetchone()
-                await connection.commit()
-                em = discord.Embed(title = f"<:success:761297849475399710> {ctx.author.name} begs hard!", color = ctx.author.color)
-                em.add_field(name = ":dollar: Earnings", value = f"{earnings} :coin:", inline = False)
-                em.add_field(name = ":tada: Free prize:", value = "Once a day you can claim a free price!")
-                em.set_author(name = ctx.author.name, icon_url = ctx.author.avatar_url)
-                em.set_thumbnail(url = ctx.author.avatar_url)
-                await ctx.send(embed=em)
+    async def sell(self, ctx, amount=1, *, item):
+        await open_account(ctx.author)
 
-    # Error handling with command handler!
-    @serve.error
-    async def serve_error(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            em = discord.Embed(title = f"<:fail:761292267360485378> Slow it down C'mon", color = ctx.author.color)
-            em.add_field(name = f"Reason:", value = f"Stop serving the server your in!")
-            em.add_field(name = "Try again in:", value = "{:.2f} seconds".format(error.retry_after))
-            em.set_thumbnail(url = ctx.author.avatar_url)
-            em.set_author(name = ctx.author.name, icon_url = ctx.author.avatar_url)
-            await ctx.send(embed = em)
+        res = await sell_this(ctx.author, item, amount)
 
-    @daily.error
-    async def daily_error(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            em = discord.Embed(title = f"<:fail:761292267360485378> Slow it down C'mon", color = ctx.author.color)
-            em.add_field(name = f"Reason:", value = f"Get back to studying!")
-            seconds = round(error.retry_after)
-            minutes = round(seconds / 60)
-            hours = round(minutes / 60)
-            em.add_field(name = "Try again in:", value = f"{hours} hours, {minutes} minutes and {seconds} seconds!")
-            em.set_thumbnail(url = ctx.author.avatar_url)
-            em.set_author(name = ctx.author.name, icon_url = ctx.author.avatar_url)
-            await ctx.send(embed = em)
+        if not res[0]:
+            if res[1] == 1:
+                await ctx.send("You dont have that item!")
+                return
+            if res[1] == 2:
+                await ctx.send(f"You don't have {amount} {item} in your bag.")
+                return
+            if res[1] == 3:
+                await ctx.send(f"You don't have {item} in your bag.")
+                return
 
-    @weekly.error
-    async def weekly_error(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            em = discord.Embed(title = f"<:fail:761292267360485378> Slow it down C'mon", color = ctx.author.color)
-            em.add_field(name = f"Reason:", value = f"Get back to studying! Weekly prizes are called weekly for a reason!")
-            em.add_field(name = "Try again in:", value = "{:.2f}s".format(error.retry_after))
-            em.set_thumbnail(url = ctx.author.avatar_url)
-            em.set_author(name = ctx.author.name, icon_url = ctx.author.avatar_url)
-            await ctx.send(embed = em)
+        await ctx.send(f"You just sold {amount} {item}.")
 
-    @devwith.error
-    async def devwith_error(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            em = discord.Embed(title = f"<:fail:761292267360485378> Slow it down C'mon", color = ctx.author.color)
-            em.add_field(name = f"Reason:", value = f"Your already too rich, Lord {ctx.author.mention}!")
-            em.add_field(name = "Try again in:", value = "{:.2f} seconds".format(error.retry_after))
-            em.set_thumbnail(url = ctx.author.avatar_url)
-            em.set_author(name = ctx.author.name, icon_url = ctx.author.avatar_url)
-            await ctx.send(embed = em)
-
-    @beg.error
-    async def beg_error(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            em = discord.Embed(title = f"<:fail:761292267360485378> Slow it down C'mon", color = ctx.author.color)
-            em.add_field(name = f"Reason:", value = f"Begging makes you look poor which you are {ctx.author.mention}!")
-            em.add_field(name = "Try again in:", value = "{:.2f} seconds".format(error.retry_after))
-            em.set_thumbnail(url = ctx.author.avatar_url)
-            em.set_author(name = ctx.author.name, icon_url = ctx.author.avatar_url)
-            await ctx.send(embed = em)
 
 def setup(client):
     client.add_cog(Economy(client))
