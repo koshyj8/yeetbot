@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from discord.ext.commands.converter import MemberConverter
 import discordbotdash.dash as dbd
 import sys
 import datetime
@@ -113,6 +114,13 @@ class Owner(commands.Cog):
 		b = await attachment.read()
 		await self.bot.user.edit(avatar=b)
 		await ctx.send(f"`Changed Bot Avatar`")
+
+	@commands.command(aliases=['sendmsg'], hidden = True)
+	@commands.is_owner()
+	async def dm(self, ctx, member: MemberConverter, *, message):
+		await ctx.message.delete()
+		embeddm = discord.Embed(title=message)
+		await member.send(embed=embeddm)
 
 	@commands.Cog.listener()
 	async def on_ready(self):

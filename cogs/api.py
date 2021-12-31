@@ -475,7 +475,7 @@ class API(commands.Cog):
 		await ctx.send(embed=embed)
 
 
-	@commands.command(name='urbandictionary', aliases=["urban", "ub"])
+	"""@commands.command(name='urbandictionary', aliases=["urban", "ub"])
 	async def _urbandictionary(self, ctx, *, query):
 		async with aiohttp.ClientSession() as cs:
 			async with cs.get("http://api.urbandictionary.com/v0/define", params={"term": query}) as r:
@@ -509,7 +509,7 @@ class API(commands.Cog):
 		pages.add_reaction("❌", "delete")
 		pages.add_reaction("\U000025b6", "next")
 		pages.add_reaction("\U000023e9", "last")
-		await pages.send(embeds)
+		await pages.send(embeds)"""
 
 	@commands.command()
 	async def weather(self, ctx,*,city: str=None):

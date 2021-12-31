@@ -70,7 +70,15 @@ class Game(commands.Cog):
 		"""Play Minesweeper"""
 		await mplay(ctx, columns, rows, bombs)
 
-	@commands.command(name="rps")
+	@commands.command()
+	async def rps(self, ctx, member:MemberConverter):
+		choices = { 1 : "rock",
+		2 : "paper",
+		3 : "scissors"}
+
+		reactions = {}
+
+	"""@commands.command(name="rps")
 	async def rock_paper_scissors(self, context):
 		choices = {
 			0: "rock",
@@ -130,7 +138,7 @@ class Game(commands.Cog):
 				title="Time's Up!", color=discord.Color.random())
 			timeout_embed.set_author(
 				name=context.author.display_name, icon_url=context.author.avatar_url)
-			await choose_message.edit(embed=timeout_embed)
+			await choose_message.edit(embed=timeout_embed)"""
 
 	@commands.command(name='akinator')
 	@commands.max_concurrency(1, per=BucketType.default)
