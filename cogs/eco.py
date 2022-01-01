@@ -6,15 +6,7 @@ import datetime
 import random
 from discord.ext.commands.converter import MemberConverter
 
-db = sqlite3.connect("cogs\db\eco.sqlite")
-
-
-
-def add_wallet(member_id:MemberConverter, amount:int):
-	return
-
-def add_bank(member_id:MemberConverter, amount:int):
-	return
+db = sqlite3.connect("database\eco.sqlite")
 
 class Economy(commands.Cog):
 	def __init__(self, bot):
@@ -45,6 +37,10 @@ class Economy(commands.Cog):
 		cursor = db.cursor()
 		cursor.execute(f'SELECT member_id, bank, wallet FROM user WHERE member_id = {member.id}')
 		result = cursor.fetchone()
+
+		if result is None:
+			return await ctx.send("`Please create an account first.`")
+
 		embed = discord.Embed(title = f"{member.name}'s Balance", color = discord.Color.random())
 		embed.add_field(name = 'Bank Balance', value = result[1])
 		embed.add_field(name = 'Wallet', value = result[2])
@@ -58,6 +54,10 @@ class Economy(commands.Cog):
 		cursor.execute(
 			f'SELECT member_id, bank, wallet FROM user WHERE member_id = {ctx.author.id}')
 		result = cursor.fetchone()
+
+
+		if result is None:
+			return await ctx.send("`Please create an account first.`")
 
 		if amount == 'all':
 			amount = result[2]
@@ -100,6 +100,10 @@ class Economy(commands.Cog):
 			f'SELECT member_id, bank, wallet FROM user WHERE member_id = {ctx.author.id}')
 		
 		result = cursor.fetchone()
+
+		if result is None:
+			return await ctx.send("`Please create an account first.`")
+
 		if amount == 'all':
 			amount = result[1]
 
@@ -141,6 +145,9 @@ class Economy(commands.Cog):
 			f'SELECT last_daily, wallet, member_id FROM user WHERE member_id = {ctx.author.id}')
 		result = cursor.fetchone()
 
+		if result is None:
+			return await ctx.send("`Please create an account first.`")
+
 		if result[0] is None:
 	
 			sql = (f"UPDATE user SET last_daily = ?, wallet = ? WHERE member_id = {ctx.author.id}")
@@ -176,6 +183,9 @@ class Economy(commands.Cog):
 		cursor.execute(
 			f'SELECT last_weekly, wallet, member_id FROM user WHERE member_id = {ctx.author.id}')
 		result = cursor.fetchone()
+
+		if result is None:
+			return await ctx.send("`Please create an account first.`")
 
 		if result[0] is None:
 
@@ -216,6 +226,9 @@ class Economy(commands.Cog):
 		jobs = ['Cashier', 'Shop stocker', 'Realtor', 'Delivery Driver']
 		job = random.choice(jobs)
 
+		if result is None:
+			return await ctx.send("`Please create an account first.`")
+
 		if job == 'Cashier' or job == 'Delivery Driver':
 			earnings = random.randint(500, 1000)
 		elif job == 'Shop stocker':
@@ -252,8 +265,7 @@ class Economy(commands.Cog):
 			else:
 				await ctx.send(f"`You can only work every 2 hours.`")
 
-	async def rob(self, ctx, member: MemberConverter):
-		return
+	#TODO: Add rob, inventory, shop, buy, sell, gambling etc.
 
 def setup(bot):
 	bot.add_cog(Economy(bot))
