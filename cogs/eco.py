@@ -167,8 +167,8 @@ class Economy(commands.Cog):
 			epoch = int(time.mktime(time.strptime(
 				str(date_now).partition('.')[0].replace('-', '.'), pattern)))
 
-			if epoch - result[1] <= 86400:
-				sql = (f"UPDATE user SET (last_daily, wallet) VALUES(?, ?) WHERE member_id = {ctx.author.id}")
+			if epoch - result[1] >= 86400:
+				sql = (f"UPDATE user SET last_daily = ?, wallet = ? WHERE member_id = {ctx.author.id}")
 				vals = (epoch, result[1] + 2000)
 				cursor.execute(sql, vals)
 				db.commit()
@@ -250,13 +250,21 @@ class Economy(commands.Cog):
 			cursor.close()
 			await ctx.send(f"`You have been employed as a {job}\nYou worked and earned {earnings} coins.`")
 		else:
+			job = result[2]
+			if job == 'Cashier' or job == 'Delivery Driver':
+				earnings = random.randint(500, 1000)
+			elif job == 'Shop stocker':
+				earnings = random.randint(300, 800)
+			elif job == 'Realtor':
+				earnings = random.randint(900, 1800)
 			date_now = datetime.datetime.now()
 			pattern = '%Y.%m.%d %H:%M:%S'
 			epoch = int(time.mktime(time.strptime(
 				str(date_now).partition('.')[0].replace('-', '.'), pattern)))
 
+
 			if epoch - result[3] >= 7200:
-				sql = (f"UPDATE user SET (last_job, wallet) VALUES(?,?) WHERE member_id = {ctx.author.id}")
+				sql = (f"UPDATE user SET last_job = ?, wallet = ? WHERE member_id = {ctx.author.id}")
 				vals = (epoch, result[1] + earnings)
 				cursor.execute(sql, vals)
 				db.commit()

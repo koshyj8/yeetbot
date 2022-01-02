@@ -526,8 +526,8 @@ class API(commands.Cog):
 			current_pressure = y["pressure"]
 			current_humidity = y["humidity"]
 			z = x["weather"]
-			weather_description = z[0]["description"]
-			embed = discord.Embed(title=f"Weather in {city_name}",color=ctx.guild.me.top_role.color)
+			weather_description = z[0]["description"].title()
+			embed = discord.Embed(title=f"Weather in {city_name.title()}",color=discord.Color.random())
 			embed.add_field(name="Weather", value=f"**{weather_description}**", inline=False)
 			embed.add_field(name="Temperature(°C)", value=f"**{current_temperature_celsiuis}°C**", inline=False)
 			embed.add_field(name="Humidity(%)", value=f"**{current_humidity}%**", inline=False)
