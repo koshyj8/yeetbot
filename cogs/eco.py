@@ -275,6 +275,152 @@ class Economy(commands.Cog):
 
 	#TODO: Add rob, inventory, shop, buy, sell, gambling etc.
 
+	@commands.command()
+	async def rob(self, ctx, *, user_to_rob:MemberConverter):
+		pattern = '%Y.%m.%d %H:%M:%S'
+		time_now = datetime.datetime.now()
+		epoch = int(time.mktime(time.strptime(
+                    str(time_now).partition('.')[0].replace('-', '.'), pattern)))
+
+		cursor = db.cursor()
+		cursor.execute(f"SELECT member_id, wallet, last_rob FROM user WHERE member_id = {ctx.author.id}")
+		result_robber = cursor.fetchone()
+
+		if result_robber is None:
+			return await ctx.send("`Please create an account first.`")
+
+		cursor.execute(f"SELECT member_id, wallet, last_robbed FROM user WHERE member_id = {user_to_rob.id}")
+		result_robbed = cursor.fetchone()
+
+		if result_robbed is None:
+			return await ctx.send("`The person you are trying to rob does not have an account.`")
+		
+		random_rob = random.randint(1, 6)
+
+		if result_robber[2] is not None and result_robbed[2] is None:
+			if result_robbed[1] > 800 and epoch - result_robber[2] >= 28800:
+				if random_rob != 1 or random_rob != 6:
+					loot = random.randint(100, 1000)
+					sql = (f"UPDATE user SET wallet = ?, last_rob = ? WHERE member_id = {ctx.author.id}")
+					val = (result_robber[1] + loot, epoch)	
+					sql_r = (f"UPDATE user SET wallet = ?, last_robbed = ? WHERE member_id = {user_to_rob.id}")
+					val_r = (result_robbed[1] - loot, epoch)
+					cursor.execute(sql, val)
+					cursor.execute(sql_r, val_r)
+					db.commit()
+					cursor.close()
+				elif random_rob == 1:
+					await ctx.send(f"`You were unable to rob {user_to_rob.name}`")
+				elif random_rob == 6:
+					loot = random.randint(100, result_robber[1])
+					sql = (f"UPDATE user SET wallet = ?, last_rob = ? WHERE member_id = {ctx.author.id}")
+					val = (result_robber[1] - loot, epoch)
+					sql_r = (f"UPDATE user SET wallet = ?, last_robbed = ? WHERE member_id = {user_to_rob.id}")
+					val_r = (result_robbed[1] + loot, epoch)
+					cursor.execute(sql, val)
+					cursor.execute(sql_r, val_r)
+					db.commit()
+					cursor.close()
+			elif epoch - result_robber[2] < 28800:
+				await ctx.send((f"`You can only rob once every 8 hours.`"))
+
+		elif result_robber[2] is None and result_robbed[2] is not None:
+			if result_robbed[1] > 800 and epoch - result_robbed[2] >= 43200:
+				if random_rob != 1 or random_rob != 6:
+					loot = random.randint(100, 1000)
+					sql = (
+						f"UPDATE user SET wallet = ?, last_rob = ? WHERE member_id = {ctx.author.id}")
+					val = (result_robber[1] + loot, epoch)
+					sql_r = (
+						f"UPDATE user SET wallet = ?, last_robbed = ? WHERE member_id = {user_to_rob.id}")
+					val_r = (result_robbed[1] - loot, epoch)
+					cursor.execute(sql, val)
+					cursor.execute(sql_r, val_r)
+					db.commit()
+					cursor.close()
+				elif random_rob == 1:
+					await ctx.send(f"`You were unable to rob {user_to_rob.name}`")
+				elif random_rob == 6:
+					loot = random.randint(100, result_robber[1])
+					sql = (
+						f"UPDATE user SET wallet = ?, last_rob = ? WHERE member_id = {ctx.author.id}")
+					val = (result_robber[1] - loot, epoch)
+					sql_r = (
+						f"UPDATE user SET wallet = ?, last_robbed = ? WHERE member_id = {user_to_rob.id}")
+					val_r = (result_robbed[1] + loot, epoch)
+					cursor.execute(sql, val)
+					cursor.execute(sql_r, val_r)
+					db.commit()
+					cursor.close()
+			elif epoch - result_robbed[2] < 43200:
+				await ctx.send(f"`This user was robbed in last the last 12 hours, give them a break.`")
+				
+		elif result_robbed[2] is None and result_robber[2] is None:
+			if result_robbed[1] > 800:
+				if random_rob != 1 or random_rob != 6:
+					loot = random.randint(100, 1000)
+					sql = (
+						f"UPDATE user SET wallet = ?, last_rob = ? WHERE member_id = {ctx.author.id}")
+					val = (result_robber[1] + loot, epoch)
+					sql_r = (
+						f"UPDATE user SET wallet = ?, last_robbed = ? WHERE member_id = {user_to_rob.id}")
+					val_r = (result_robbed[1] - loot, epoch)
+					cursor.execute(sql, val)
+					cursor.execute(sql_r, val_r)
+					db.commit()
+					cursor.close()
+					await ctx.send(f"`You successfully robbed {user_to_rob.name} of {loot} coins.`")
+				elif random_rob == 1:
+					await ctx.send(f"`You were unable to rob {user_to_rob.name}`")
+				elif random_rob == 6:
+					loot = random.randint(100, result_robber[1])
+					sql = (
+						f"UPDATE user SET wallet = ?, last_rob = ? WHERE member_id = {ctx.author.id}")
+					val = (result_robber[1] - loot, epoch)
+					sql_r = (
+						f"UPDATE user SET wallet = ?, last_robbed = ? WHERE member_id = {user_to_rob.id}")
+					val_r = (result_robbed[1] + loot, epoch)
+					cursor.execute(sql, val)
+					cursor.execute(sql_r, val_r)
+					db.commit()
+					cursor.close()
+					await ctx.send(f"`You were caught trying to rob {user_to_rob.name} and you have to pay them a fine of {loot} coins.`")
+
+		elif (result_robbed[2] is not None) and (result_robber[2] is not None):
+			if ((result_robbed[1] > 800) and (epoch - result_robbed[2] >= 43200) and( epoch - result_robber[2] >= 28800)):
+				if random_rob != 1 or random_rob != 6:
+					loot = random.randint(100, 1000)
+					sql = (
+						f"UPDATE user SET wallet = ?, last_rob = ? WHERE member_id = {ctx.author.id}")
+					val = (result_robber[1] + loot, epoch)
+					sql_r = (
+						f"UPDATE user SET wallet = ?, last_robbed = ? WHERE member_id = {user_to_rob.id}")
+					val_r = (result_robbed[1] - loot, epoch)
+					cursor.execute(sql, val)
+					cursor.execute(sql_r, val_r)
+					db.commit()
+					cursor.close()
+					await ctx.send(f"`You successfully robbed {user_to_rob.name} of {loot} coins.`")
+				elif random_rob == 1:
+					await ctx.send(f"`You were unable to rob {user_to_rob.name}.`")
+				elif random_rob == 6:
+					loot = random.randint(100, result_robber[1])
+					sql = (
+						f"UPDATE user SET wallet = ?, last_rob = ? WHERE member_id = {ctx.author.id}")
+					val = (result_robber[1] - loot, epoch)
+					sql_r = (
+						f"UPDATE user SET wallet = ?, last_robbed = ? WHERE member_id = {user_to_rob.id}")
+					val_r = (result_robbed[1] + loot, epoch)
+					cursor.execute(sql, val)
+					cursor.execute(sql_r, val_r)
+					db.commit()
+					cursor.close()
+					await ctx.send(f"`You were caught trying to rob {user_to_rob.name} and you have to pay them a fine of {loot} coins.`")
+				elif epoch - result_robber[2] < 28800:
+					await ctx.send((f"`You can only rob once every 8 hours.`"))
+				elif epoch - result_robbed[2] < 43200:
+					await ctx.send(f"`{user_to_rob.name} has been robbed in the last 12 hours. Please give them a break.`")
+
 def setup(bot):
 	bot.add_cog(Economy(bot))
 
