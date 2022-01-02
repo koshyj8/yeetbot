@@ -167,7 +167,7 @@ class Economy(commands.Cog):
 			epoch = int(time.mktime(time.strptime(
 				str(date_now).partition('.')[0].replace('-', '.'), pattern)))
 
-			if epoch - result[1] >= 86400:
+			if epoch - result[0] >= 86400:
 				sql = (f"UPDATE user SET last_daily = ?, wallet = ? WHERE member_id = {ctx.author.id}")
 				vals = (epoch, result[1] + 2000)
 				cursor.execute(sql, vals)
@@ -269,7 +269,7 @@ class Economy(commands.Cog):
 				cursor.execute(sql, vals)
 				db.commit()
 				cursor.close()
-				await ctx.send(f"`You worked and earned {earnings} coins.`")
+				await ctx.send(f"`You worked as a {job} and earned {earnings} coins.`")
 			else:
 				await ctx.send(f"`You can only work every 2 hours.`")
 
