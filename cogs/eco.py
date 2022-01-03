@@ -273,8 +273,6 @@ class Economy(commands.Cog):
 			else:
 				await ctx.send(f"`You can only work every 2 hours.`")
 
-	#TODO: Add rob, inventory, shop, buy, sell, gambling etc.
-
 	@commands.command()
 	async def rob(self, ctx, *, user_to_rob:MemberConverter):
 		pattern = '%Y.%m.%d %H:%M:%S'
@@ -321,8 +319,8 @@ class Economy(commands.Cog):
 					cursor.execute(sql_r, val_r)
 					db.commit()
 					cursor.close()
-			elif epoch - result_robber[2] < 28800:
-				await ctx.send((f"`You can only rob once every 8 hours.`"))
+		elif epoch - result_robber[2] < 28800:
+			await ctx.send((f"`You can only rob once every 8 hours.`"))
 
 		elif result_robber[2] is None and result_robbed[2] is not None:
 			if result_robbed[1] > 800 and epoch - result_robbed[2] >= 43200:
@@ -352,9 +350,9 @@ class Economy(commands.Cog):
 					cursor.execute(sql_r, val_r)
 					db.commit()
 					cursor.close()
-			elif epoch - result_robbed[2] < 43200:
-				await ctx.send(f"`This user was robbed in last the last 12 hours, give them a break.`")
-				
+		elif epoch - result_robbed[2] < 43200:
+			await ctx.send(f"`This user was robbed in last the last 12 hours, give them a break.`")
+			
 		elif result_robbed[2] is None and result_robber[2] is None:
 			if result_robbed[1] > 800:
 				if random_rob != 1 or random_rob != 6:
@@ -416,10 +414,12 @@ class Economy(commands.Cog):
 					db.commit()
 					cursor.close()
 					await ctx.send(f"`You were caught trying to rob {user_to_rob.name} and you have to pay them a fine of {loot} coins.`")
-				elif epoch - result_robber[2] < 28800:
-					await ctx.send((f"`You can only rob once every 8 hours.`"))
-				elif epoch - result_robbed[2] < 43200:
-					await ctx.send(f"`{user_to_rob.name} has been robbed in the last 12 hours. Please give them a break.`")
+			elif epoch - result_robber[2] < 28800:
+				await ctx.send((f"`You can only rob once every 8 hours.`"))
+			elif epoch - result_robbed[2] < 43200:
+				await ctx.send(f"`{user_to_rob.name} has been robbed in the last 12 hours. Please give them a break.`")
+
+	#TODO: Add inventory, shop, buy, sell, gambling etc.
 
 def setup(bot):
 	bot.add_cog(Economy(bot))
