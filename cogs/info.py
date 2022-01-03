@@ -10,6 +10,49 @@ from math import floor
 import psutil
 import inspect
 
+buttons = [
+	[
+		Button(style = ButtonStyle.grey, label = '1'),
+		Button(style = ButtonStyle.grey, label = '2'),
+		Button(style = ButtonStyle.grey, label = '3'),
+		Button(style = ButtonStyle.blue, label='x'),
+		Button(style = ButtonStyle.red, label='Exit'),
+	],
+	[
+		Button(style=ButtonStyle.grey, label='4'),
+		Button(style=ButtonStyle.grey, label='5'),
+		Button(style=ButtonStyle.grey, label='6'),
+		Button(style=ButtonStyle.blue, label='+'),
+		Button(style=ButtonStyle.red, label='←'),
+	],
+	[
+		Button(style=ButtonStyle.grey, label='7'),
+		Button(style=ButtonStyle.grey, label='8'),
+		Button(style=ButtonStyle.grey, label='9'),
+		Button(style=ButtonStyle.blue, label='+'),
+		Button(style=ButtonStyle.red, label='Clear'),
+	],
+	[
+		Button(style=ButtonStyle.grey, label='00'),
+		Button(style=ButtonStyle.grey, label='0'),
+		Button(style=ButtonStyle.grey, label='.'),
+		Button(style=ButtonStyle.blue, label='-'),
+		Button(style=ButtonStyle.green, label='='),
+	],
+]
+
+def calculator(exp):
+	o = exp.replace('x', '*')
+	o = exp.replace('^', '**')
+
+	res = ''
+
+	try:
+		res = str(eval(o))
+	except:
+		result = 'An Error Occured'
+	return result
+
 from aiohttp.client import ClientSession
 HUMANIZED_ACTIVITY = {
 	discord.ActivityType.unknown: "Unknown activity",
@@ -26,6 +69,34 @@ class Information(commands.Cog):
 	'''Commands for information'''
 	def __init__(self,bot):
 		self.bot = bot
+
+	@commands.command()
+	async def calc(self, ctx):
+		m = await ctx.send(content = 'Loading Calculator')
+		expression = 'None'
+
+		e = discord.Embed(title = 'Calculator', color = discord.Color.random(), description = expression)
+		await m.edit(components= buttons, embed = e)
+		res = await self.bot.wait_for('button_click')
+		if res.author.id == ctx.author.id:
+			expression = res.message.embeds[0].description
+			if expression == 'None' or expression == 'An Error Occured':
+				expresion = ''
+			if res.component.label == 'Exit':
+				await res.respond(content = 'Calculator Closed', type = 7)
+			elif res.component.label == '←':
+				expression = expression[:-1]
+			elif res.component.label == 'Clear':
+				expression = None
+			elif res.component.label == '=':
+				expression = calculator(expression)
+			else:
+				expression += res.component.label
+
+			f = discord.Embed(title = f'{res.author.name}\'s Calculator | {ctx.author.id}', description = expression)
+			await res.respond(content = '', embed = f, component = buttons, type = 7)
+
+
 
 	@commands.command(aliases=['uinfo', 'minfo', 'ui'], brief='Get information about a user\'s account')
 	async def userinfo(self, ctx, member:MemberConverter = None):
