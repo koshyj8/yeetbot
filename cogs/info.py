@@ -1,3 +1,4 @@
+from aiohttp.client import ClientSession
 import discord
 from discord import *
 from discord.ext import commands
@@ -5,255 +6,270 @@ from discord.ext.commands.converter import MemberConverter
 from discord_components import *
 
 from discord.user import *
-import urllib.parse, urllib.request
+import urllib.parse
+import urllib.request
 from math import floor
 import psutil
 import inspect
 
 buttons = [
-	[
-		Button(style = ButtonStyle.grey, label = '1'),
-		Button(style = ButtonStyle.grey, label = '2'),
-		Button(style = ButtonStyle.grey, label = '3'),
-		Button(style = ButtonStyle.blue, label='x'),
-		Button(style = ButtonStyle.red, label='Exit'),
-	],
-	[
-		Button(style=ButtonStyle.grey, label='4'),
-		Button(style=ButtonStyle.grey, label='5'),
-		Button(style=ButtonStyle.grey, label='6'),
-		Button(style=ButtonStyle.blue, label='+'),
-		Button(style=ButtonStyle.red, label='←'),
-	],
-	[
-		Button(style=ButtonStyle.grey, label='7'),
-		Button(style=ButtonStyle.grey, label='8'),
-		Button(style=ButtonStyle.grey, label='9'),
-		Button(style=ButtonStyle.blue, label='+'),
-		Button(style=ButtonStyle.red, label='Clear'),
-	],
-	[
-		Button(style=ButtonStyle.grey, label='00'),
-		Button(style=ButtonStyle.grey, label='0'),
-		Button(style=ButtonStyle.grey, label='.'),
-		Button(style=ButtonStyle.blue, label='-'),
-		Button(style=ButtonStyle.green, label='='),
-	],
+    [
+        Button(style=ButtonStyle.grey, label='1'),
+        Button(style=ButtonStyle.grey, label='2'),
+        Button(style=ButtonStyle.grey, label='3'),
+        Button(style=ButtonStyle.blue, label='x'),
+        Button(style=ButtonStyle.red, label='Exit'),
+    ],
+    [
+        Button(style=ButtonStyle.grey, label='4'),
+        Button(style=ButtonStyle.grey, label='5'),
+        Button(style=ButtonStyle.grey, label='6'),
+        Button(style=ButtonStyle.blue, label='+'),
+        Button(style=ButtonStyle.red, label='←'),
+    ],
+    [
+        Button(style=ButtonStyle.grey, label='7'),
+        Button(style=ButtonStyle.grey, label='8'),
+        Button(style=ButtonStyle.grey, label='9'),
+        Button(style=ButtonStyle.blue, label='+'),
+        Button(style=ButtonStyle.red, label='Clear'),
+    ],
+    [
+        Button(style=ButtonStyle.grey, label='00'),
+        Button(style=ButtonStyle.grey, label='0'),
+        Button(style=ButtonStyle.grey, label='.'),
+        Button(style=ButtonStyle.blue, label='-'),
+        Button(style=ButtonStyle.green, label='='),
+    ],
 ]
 
+
 def calculator(exp):
-	o = exp.replace('x', '*')
-	o = exp.replace('^', '**')
+    o = exp.replace('x', '*')
+    o = exp.replace('^', '**')
 
-	res = ''
+    res = ''
 
-	try:
-		res = str(eval(o))
-	except:
-		result = 'An Error Occured'
-	return result
+    try:
+        res = str(eval(o))
+    except:
+        result = 'An Error Occured'
+    return result
 
-from aiohttp.client import ClientSession
+
 HUMANIZED_ACTIVITY = {
-	discord.ActivityType.unknown: "Unknown activity",
-	discord.ActivityType.playing: "Playing",
-	discord.ActivityType.streaming: "Live on Twitch",
-	discord.ActivityType.listening: "Listening",
-	discord.ActivityType.watching: "Watching",
-	discord.ActivityType.custom: "Custom status"}
+    discord.ActivityType.unknown: "Unknown activity",
+    discord.ActivityType.playing: "Playing",
+    discord.ActivityType.streaming: "Live on Twitch",
+    discord.ActivityType.listening: "Listening",
+    discord.ActivityType.watching: "Watching",
+    discord.ActivityType.custom: "Custom status"}
+
 
 def humanize_activity(activity_type: discord.ActivityType):
-	return HUMANIZED_ACTIVITY.get(activity_type)
+    return HUMANIZED_ACTIVITY.get(activity_type)
+
 
 class Information(commands.Cog):
-	'''Commands for information'''
-	def __init__(self,bot):
-		self.bot = bot
+    '''Commands for information'''
 
-	@commands.command()
-	async def calc(self, ctx):
-		m = await ctx.send(content = 'Loading Calculator')
-		expression = 'None'
+    def __init__(self, bot):
+        self.bot = bot
 
-		e = discord.Embed(title = 'Calculator', color = discord.Color.random(), description = expression)
-		await m.edit(components= buttons, embed = e)
-		res = await self.bot.wait_for('button_click')
-		if res.author.id == ctx.author.id:
-			expression = res.message.embeds[0].description
-			if expression == 'None' or expression == 'An Error Occured':
-				expresion = ''
-			if res.component.label == 'Exit':
-				await res.respond(content = 'Calculator Closed', type = 7)
-			elif res.component.label == '←':
-				expression = expression[:-1]
-			elif res.component.label == 'Clear':
-				expression = None
-			elif res.component.label == '=':
-				expression = calculator(expression)
-			else:
-				expression += res.component.label
+    @commands.command()
+    async def calc(self, ctx):
+        m = await ctx.send(content='Loading Calculator')
+        expression = 'None'
 
-			f = discord.Embed(title = f'{res.author.name}\'s Calculator | {ctx.author.id}', description = expression)
-			await res.respond(content = '', embed = f, component = buttons, type = 7)
+        e = discord.Embed(title='Calculator',
+                          color=discord.Color.random(), description=expression)
+        await m.edit(components=buttons, embed=e)
+        res = await self.bot.wait_for('button_click')
+        if res.author.id == ctx.author.id:
+            expression = res.message.embeds[0].description
+            if expression == 'None' or expression == 'An Error Occured':
+                expresion = ''
+            if res.component.label == 'Exit':
+                await res.respond(content='Calculator Closed', type=7)
+            elif res.component.label == '←':
+                expression = expression[:-1]
+            elif res.component.label == 'Clear':
+                expression = None
+            elif res.component.label == '=':
+                expression = calculator(expression)
+            else:
+                expression += res.component.label
 
+            f = discord.Embed(
+                title=f'{res.author.name}\'s Calculator | {ctx.author.id}', description=expression)
+            await res.respond(content='', embed=f, component=buttons, type=7)
 
+    @commands.command(aliases=['uinfo', 'minfo', 'ui'], brief='Get information about a user\'s account')
+    async def userinfo(self, ctx, member: MemberConverter = None):
+        '''Get the user's information'''
 
-	@commands.command(aliases=['uinfo', 'minfo', 'ui'], brief='Get information about a user\'s account')
-	async def userinfo(self, ctx, member:MemberConverter = None):
-		'''Get the user's information'''
+        member = member or ctx.author
 
-		member = member or ctx.author
+        if member.bot == True:
 
-		if member.bot==True:
+            roles = [role for role in member.roles[1:]]
+            embed = discord.Embed(colour=member.color,
+                                  timestamp=ctx.message.created_at)
 
-			roles = [role for role in member.roles[1:]]
-			embed = discord.Embed(colour=member.color, timestamp=ctx.message.created_at)
+            for activity in member.activities:
+                if isinstance(activity, discord.Spotify):
+                    track_url = f"https://open.spotify.com/track/{activity.track_id}"
+                    artists = ", ".join(activity.artists)
+                    value = f"[{artists} — {activity.title}]({track_url})"
 
-			for activity in member.activities:
-				if isinstance(activity, discord.Spotify):
-					track_url = f"https://open.spotify.com/track/{activity.track_id}"
-					artists = ", ".join(activity.artists)
-					value = f"[{artists} — {activity.title}]({track_url})"
+                    embed.add_field(
+                        name="Listening", value=value, inline=False)
 
-					embed.add_field(
-						name="Listening", value=value, inline=False)
+                else:
+                    embed.add_field(name=humanize_activity(
+                        activity.type), value=f"{activity.name}", inline=False)
 
-				else:
-					embed.add_field(name=humanize_activity(
-						activity.type), value=f"{activity.name}", inline=False)
+            embed.set_author(name=f"{member}'s Information")
+            embed.set_thumbnail(url=member.avatar_url_as)
 
+            embed.add_field(name="Member ID:", value=member.id)
+            embed.add_field(name="Nickname:", value=member.display_name)
 
-			embed.set_author(name=f"{member}'s Information")
-			embed.set_thumbnail(url = member.avatar_url_as)
+            embed.add_field(name="Created At:", value=member.created_at.strftime(
+                "%a, %#d %B %Y, %I:%M %p UTC"))
+            embed.add_field(name="Joined:", value=member.joined_at.strftime(
+                "%a, %#d %B %Y, %I:%M %p UTC"))
+            embed.add_field(name=f"Roles: ({len(roles)})", value=" ".join(
+                [role.mention for role in roles]))
+            embed.add_field(name="Top Role:", value=member.top_role.mention)
 
-			embed.add_field(name="Member ID:", value=member.id)
-			embed.add_field(name="Nickname:", value=member.display_name)
+            embed.add_field(name="Is the member a bot?", value=member.bot)
 
-			embed.add_field(name="Created At:", value=member.created_at.strftime("%a, %#d %B %Y, %I:%M %p UTC"))
-			embed.add_field(name="Joined:", value=member.joined_at.strftime("%a, %#d %B %Y, %I:%M %p UTC"))
-			embed.add_field(name=f"Roles: ({len(roles)})", value=" ".join([role.mention for role in roles]))
-			embed.add_field(name="Top Role:", value=member.top_role.mention)
+            await ctx.send(embed=embed)
 
-			embed.add_field(name="Is the member a bot?", value=member.bot)
+        else:
+            roles = [role for role in member.roles[1:]]
+            embed = discord.Embed(colour=member.color,
+                                  timestamp=ctx.message.created_at)
 
-			await ctx.send(embed=embed)
+            for activity in member.activities:
+                if isinstance(activity, discord.Spotify):
+                    track_url = f"https://open.spotify.com/track/{activity.track_id}"
+                    artists = ", ".join(activity.artists)
+                    value = f"[{artists} — {activity.title}]({track_url})"
 
-		else:
-			roles = [role for role in member.roles[1:]]
-			embed = discord.Embed(colour=member.color, timestamp=ctx.message.created_at)
+                    embed.add_field(
+                        name="Listening", value=value, inline=False)
 
-			for activity in member.activities:
-				if isinstance(activity, discord.Spotify):
-					track_url = f"https://open.spotify.com/track/{activity.track_id}"
-					artists = ", ".join(activity.artists)
-					value = f"[{artists} — {activity.title}]({track_url})"
+                else:
+                    embed.add_field(name=humanize_activity(
+                        activity.type), value=f"{activity.name}", inline=False)
 
-					embed.add_field(
-						name="Listening", value=value, inline=False)
+            embed.set_author(name=f"{member}'s Information")
 
-				else:
-					embed.add_field(name=humanize_activity(
-						activity.type), value=f"{activity.name}", inline=False)
+            embed.add_field(name="Member ID:", value=member.id)
+            embed.add_field(name="Nickname:", value=member.display_name)
 
+            embed.add_field(name="Created At:", value=member.created_at.strftime(
+                "%a, %#d %B %Y, %I:%M %p UTC"))
+            embed.add_field(name="Joined:", value=member.joined_at.strftime(
+                "%a, %#d %B %Y, %I:%M %p UTC"))
+            embed.add_field(name=f"Roles: ({len(roles)})", value=" ".join(
+                [role.mention for role in roles]))
+            embed.add_field(name="Top Role:", value=member.top_role.mention)
 
-			embed.set_author(name=f"{member}'s Information")
+            embed.add_field(name="Is the member a bot?", value=member.bot)
 
-			embed.add_field(name="Member ID:", value=member.id)
-			embed.add_field(name="Nickname:", value=member.display_name)
+            await ctx.send(embed=embed)
 
-			embed.add_field(name="Created At:", value=member.created_at.strftime("%a, %#d %B %Y, %I:%M %p UTC"))
-			embed.add_field(name="Joined:", value=member.joined_at.strftime("%a, %#d %B %Y, %I:%M %p UTC"))
-			embed.add_field(name=f"Roles: ({len(roles)})", value=" ".join([role.mention for role in roles]))
-			embed.add_field(name="Top Role:", value=member.top_role.mention)
+            if member.id == 680773275948679195:
+                await ctx.send("`just kidding he is a bot!`")
 
-			embed.add_field(name="Is the member a bot?", value=member.bot)
+    @commands.command()
+    async def avatar(self, ctx, member: MemberConverter = None):
+        member = member or ctx.author
 
-			await ctx.send(embed=embed)
+        await ctx.send(member.avatar_url)
 
-			if member.id == 680773275948679195:
-				await ctx.send("`just kidding he is a bot!`")
+    @commands.command()
+    async def github(self, ctx):
+        await ctx.send("<https://github.com/koshyj8/yeetbot>")
 
-	@commands.command()
-	async def avatar(self, ctx, member:MemberConverter = None):
-		member = member or ctx.author
+    @commands.command()
+    async def invite(self, ctx):
+        '''Bot Invite Link'''
+        await ctx.send("`Bot Invite Link`", components=[Button(style=ButtonStyle.URL, label="Invite", url="https://discord.com/oauth2/authorize?client_id=760126094338031626&permissions=8&scope=bot")])
 
-		await ctx.send(member.avatar_url)
+    @commands.command()
+    async def serverinvite(self, ctx):
+        '''A one time server invite'''
+        invitelink = await ctx.channel.create_invite(max_age=90, max_uses=1, unique=True)
+        res = str(invitelink)
+        await ctx.send("`Server Invite Link`", components=[Button(style=ButtonStyle.URL, label="Invite", url=res)])
 
-	@commands.command()
-	async def github(self, ctx):
-		await ctx.send("<https://github.com/koshyj8/yeetbot>")
+    @commands.command()
+    async def source(self, ctx, *, command):
+        '''See the source code for any command.'''
+        source = str(inspect.getsource(self.bot.get_command(command).callback))
+        source_code = '```py\n' + source.replace('`', '\u200b`') + '\n```'
+        if len(source_code) > 2000:
+            async with ClientSession() as session:
+                async with session.post("https://hastebin.com/documents", data=source) as resp:
+                    data = await resp.json()
+            key = data['key']
+            return await ctx.send(f'<https://hastebin.com/{key}.py>')
+        else:
+            return await ctx.send(source_code)
 
-	@commands.command()
-	async def invite(self,ctx):
-		'''Bot Invite Link'''
-		await ctx.send("`Bot Invite Link`",components=[Button(style=ButtonStyle.URL, label="Invite", url="https://discord.com/oauth2/authorize?client_id=760126094338031626&permissions=8&scope=bot")])
-		
-	@commands.command()
-	async def serverinvite(self, ctx):
-		'''A one time server invite'''
-		invitelink = await ctx.channel.create_invite(max_age = 90, max_uses=1, unique=True)
-		res = str(invitelink)
-		await ctx.send("`Server Invite Link`", components=[Button(style=ButtonStyle.URL, label="Invite", url=res)])
+    @commands.command(aliases=['latency'])
+    async def ping(self, ctx):
+        '''Send bot latency'''
+        await ctx.send("`Ping: {0:.2f}ms`".format(round(self.bot.latency*1000, 1)))
 
-	@commands.command()
-	async def source(self, ctx, *, command):
-		'''See the source code for any command.'''
-		source = str(inspect.getsource(self.bot.get_command(command).callback))
-		source_code = '```py\n' + source.replace('`', '\u200b`') + '\n```'
-		if len(source_code) > 2000:
-			async with ClientSession() as session:
-				async with session.post("https://hastebin.com/documents", data=source) as resp:
-					data = await resp.json()
-			key = data['key']
-			return await ctx.send(f'<https://hastebin.com/{key}.py>')
-		else:
-			return await ctx.send(source_code)
+    @commands.command()
+    async def emojis(self, ctx):
+        '''Lists all emojis in a server'''
+        emotes = '\n'.join(['{1} `:{0}:`'.format(e.name, str(e))
+                           for e in ctx.message.guild.emojis])
+        if len(emotes) > 2000:
+            paginated_text = ctx.paginate(emotes)
+            for page in paginated_text:
+                if page == paginated_text[-1]:
+                    await ctx.send(f'{page}')
+                    break
+                await ctx.send(f'{page}')
 
-	@commands.command(aliases=['latency'])
-	async def ping(self, ctx):
-		'''Send bot latency'''
-		await ctx.send("`Ping: {0:.2f}ms`".format(round(self.bot.latency*1000, 1)))
+        else:
+            await ctx.send(emotes)
 
-	@commands.command()
-	async def emojis(self, ctx):
-		'''Lists all emojis in a server'''
-		emotes = '\n'.join(['{1} `:{0}:`'.format(e.name, str(e)) for e in ctx.message.guild.emojis])
-		if len(emotes) > 2000:
-			paginated_text = ctx.paginate(emotes)
-			for page in paginated_text:
-				if page == paginated_text[-1]:
-					await ctx.send(f'{page}')
-					break
-				await ctx.send(f'{page}')
+    @commands.command()
+    async def cmds(self, ctx):
+        res = len(self.bot.commands)
+        await ctx.send(f"`This bot has {res} commands.`")
 
-		else:
-			await ctx.send(emotes)
+    @commands.command()
+    async def presence(self, ctx, member: MemberConverter = None):
+        member = member or ctx.author
+        activity = discord.utils.find(lambda a: isinstance(
+            a, discord.Status), member.activities)
+        embed = discord.Embed(
+            title=f'{member}\'s status', color=discord.Color.random())
+        for activity in member.activities:
+            if activity == False:
+                await ctx.send(f"`{member} is not doing anything right now.`")
+                break
 
-	@commands.command()
-	async def cmds(self,ctx):
-		res = len(self.bot.commands)
-		await ctx.send(f"`This bot has {res} commands.`")
+            elif isinstance(activity, discord.Spotify):
+                track_url = f"https://open.spotify.com/track/{activity.track_id}"
+                artists = ", ".join(activity.artists)
+                value = f"[{artists} — {activity.title}]({track_url})"
+                embed.add_field(
+                    name="Listening", value=value, inline=False)
+            else:
+                embed.add_field(name=humanize_activity(
+                    activity.type), value=f"{activity.name}", inline=False)
+        await ctx.send(embed=embed)
 
-	@commands.command()
-	async def presence(self,ctx,member:MemberConverter=None):
-		member = member or ctx.author
-		activity = discord.utils.find(lambda a: isinstance(a, discord.Status), member.activities)
-		embed=discord.Embed(title=f'{member}\'s status',color=discord.Color.random())
-		for activity in member.activities:
-			if activity == False:
-				await ctx.send(f"`{member} is not doing anything right now.`")
-				break
-
-			elif isinstance(activity, discord.Spotify):
-				track_url = f"https://open.spotify.com/track/{activity.track_id}"
-				artists = ", ".join(activity.artists)
-				value = f"[{artists} — {activity.title}]({track_url})"
-				embed.add_field(
-					name="Listening", value=value, inline=False)
-			else:
-				embed.add_field(name=humanize_activity(
-					activity.type), value=f"{activity.name}", inline=False)
-		await ctx.send(embed=embed)
 
 def setup(bot):
-	bot.add_cog(Information(bot))
+    bot.add_cog(Information(bot))

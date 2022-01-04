@@ -1,11 +1,12 @@
+import discord
 from discord.ext import commands
 import asyncio
+
 
 def to_emoji(c):
     base = 0x1f1e6
     return chr(base + c)
 
-import discord
 
 class Poll(commands.Cog):
     """Poll Commands"""
@@ -59,11 +60,13 @@ class Poll(commands.Cog):
                    for e, v in enumerate(questions_and_choices[1:])]
 
         body = "\n".join(f"{key}: {c}" for key, c in choices)
-        embed = discord.Embed(title=f'{ctx.author} has started a poll',description=f'{question}',color=discord.Color.random())
-        embed.add_field(name='Options',value=body)
+        embed = discord.Embed(title=f'{ctx.author} has started a poll',
+                              description=f'{question}', color=discord.Color.random())
+        embed.add_field(name='Options', value=body)
         poll = await ctx.send(embed=embed)
         for emoji, _ in choices:
             await poll.add_reaction(emoji)
+
 
 def setup(bot):
     bot.add_cog(Poll(bot))
