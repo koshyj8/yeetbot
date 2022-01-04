@@ -16,6 +16,8 @@ from async_timeout import timeout
 from discord.ext import commands
 import math
 
+loop = False
+
 from core.utils.music_utils import *
 
 HUMANIZED_ACTIVITY = {

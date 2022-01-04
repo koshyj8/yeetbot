@@ -4,10 +4,14 @@ import asyncio
 import sqlite3
 import time
 import datetime
+from datetime import datetime as dte
 import random
 from discord.ext.commands.converter import MemberConverter
 from discord.ext import menus
 import json
+
+from pytz import timezone, utc
+
 
 class LeaderboardMenu(menus.ListPageSource):
 	def __init__(self, data):
@@ -365,6 +369,7 @@ class Economy(commands.Cog):
 		random_rob = random.randint(1, 6)
 
 		if result_robber[2] is not None and result_robbed[2] is None:
+			print(result_robber[2])
 			if result_robbed[1] > 800 and epoch - result_robber[2] >= 28800:
 				if random_rob != 1 or random_rob != 6:
 					loot = random.randint(100, 1000)
@@ -376,6 +381,7 @@ class Economy(commands.Cog):
 					cursor.execute(sql_r, val_r)
 					db.commit()
 					cursor.close()
+					await ctx.send(f"`You successfully robbed {user_to_rob.name} of {loot} coins.`")
 				elif random_rob == 1:
 					await ctx.send(f"`You were unable to rob {user_to_rob.name}`")
 				elif random_rob == 6:
@@ -388,8 +394,12 @@ class Economy(commands.Cog):
 					cursor.execute(sql_r, val_r)
 					db.commit()
 					cursor.close()
-		elif epoch - result_robber[2] < 28800:
-			await ctx.send((f"`You can only rob once every 8 hours.`"))
+					await ctx.send(f"`You successfully robbed {user_to_rob.name} of {loot} coins.`")
+
+			elif epoch - result_robber[2] < 28800:
+				tz = timezone("Asia/Dubai")
+				d = dte.fromtimestamp(result_robber[2], tz).strftime('%Y-%m-%d %H:%M:%S')
+				await ctx.send((f"`You can only rob once every 8 hours. Your last heist took place at {d}`"))
 
 		elif result_robber[2] is None and result_robbed[2] is not None:
 			if result_robbed[1] > 800 and epoch - result_robbed[2] >= 43200:
@@ -405,6 +415,7 @@ class Economy(commands.Cog):
 					cursor.execute(sql_r, val_r)
 					db.commit()
 					cursor.close()
+					await ctx.send(f"`You successfully robbed {user_to_rob.name} of {loot} coins.`")
 				elif random_rob == 1:
 					await ctx.send(f"`You were unable to rob {user_to_rob.name}`")
 				elif random_rob == 6:
@@ -419,8 +430,11 @@ class Economy(commands.Cog):
 					cursor.execute(sql_r, val_r)
 					db.commit()
 					cursor.close()
-		elif epoch - result_robbed[2] < 43200:
-			await ctx.send(f"`This user was robbed in last the last 12 hours, give them a break.`")
+					await ctx.send(f"`You got caught trying to steal from {user_to_rob.name} and have to pay him a fine of {loot} coins.`")
+			elif epoch - result_robbed[2] < 43200:
+				tz = timezone("Asia/Dubai")
+				d = dte.fromtimestamp(result_robbed[2], tz).strftime('%Y-%m-%d %H:%M:%S')
+				await ctx.send(f"`This user was robbed in last the last 12 hours, give them a break. They were robbed last at {d}`")
 			
 		elif result_robbed[2] is None and result_robber[2] is None:
 			if result_robbed[1] > 800:
@@ -453,7 +467,7 @@ class Economy(commands.Cog):
 					cursor.close()
 					await ctx.send(f"`You were caught trying to rob {user_to_rob.name} and you have to pay them a fine of {loot} coins.`")
 
-		elif (result_robbed[2] is not None) and (result_robber[2] is not None):
+		elif result_robbed[2] is not None and result_robber[2] is not None:
 			if ((result_robbed[1] > 800) and (epoch - result_robbed[2] >= 43200) and( epoch - result_robber[2] >= 28800)):
 				if random_rob != 1 or random_rob != 6:
 					loot = random.randint(100, 1000)
@@ -484,9 +498,13 @@ class Economy(commands.Cog):
 					cursor.close()
 					await ctx.send(f"`You were caught trying to rob {user_to_rob.name} and you have to pay them a fine of {loot} coins.`")
 			elif epoch - result_robber[2] < 28800:
-				await ctx.send((f"`You can only rob once every 8 hours.`"))
+				tz = timezone("Asia/Dubai")
+				d = dte.fromtimestamp(result_robber[2], tz).strftime('%Y-%m-%d %H:%M:%S')
+				await ctx.send((f"`You can only rob once every 8 hours. Your last heist took place at {d}`"))
 			elif epoch - result_robbed[2] < 43200:
-				await ctx.send(f"`{user_to_rob.name} has been robbed in the last 12 hours. Please give them a break.`")
+				tz = timezone("Asia/Dubai")
+				d = dte.fromtimestamp(result_robbed[2], tz).strftime('%Y-%m-%d %H:%M:%S')
+				await ctx.send(f"`This user was robbed in last the last 12 hours, give them a break. They were robbed last at {d}`")
 
 	#TODO: Add inventory, shop, buy, sell, gambling etc.
 	
@@ -603,7 +621,41 @@ class Economy(commands.Cog):
 			pages = menus.MenuPages(source=InventoryMenu(new_row,user), delete_message_after=True)
 			await pages.start(ctx)
 
+	@commands.command(aliases=['slots', 'bet'])
+	async def slot(self, ctx, bet:int):
+		""" Roll the slot machine """
+		emojis = "💎👑💫🌟🎰🍇🎱🍒"
+		a = random.choice(emojis)
+		b = random.choice(emojis)
+		c = random.choice(emojis)
 
+		slotmachine = f"** [{a} {b} {c}]\n{ctx.author.name}**,"
+
+		if bet is None:
+			await ctx.send("`Please enter an amount to bet.`")
+
+		cursor = db.cursor()
+		cursor.execute(f"SELECT wallet FROM user WHERE member_id = {ctx.author.id}")
+
+		result = cursor.fetchone()
+
+		if result is None:
+			return await ctx.send("`Please create an account first.`")
+
+		if (a == b == c):
+			cursor.execute(f"UPDATE user SET wallet = {result[0] + (bet*3)} WHERE member_id = {ctx.author.id}")
+			await ctx.send(f"{slotmachine} 3 IN A ROW!! WOW! ")
+		elif (a == b) or (a == c) or (b == c):
+			cursor.execute(
+				f"UPDATE user SET wallet = {result[0] + (bet*2)} WHERE member_id = {ctx.author.id}")
+			await ctx.send(f"{slotmachine} 2 IN A ROW!! GOOD JOB!  ")
+		else:
+
+
+			cursor.execute(
+				f"UPDATE user SET wallet = {result[0] - (bet*2)} WHERE member_id = {ctx.author.id}")
+			await ctx.send(f"{slotmachine} HA! YOU LOST! ")
+			
 
 def setup(bot):
 	bot.add_cog(Economy(bot))
