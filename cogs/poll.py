@@ -2,6 +2,8 @@ import discord
 from discord.ext import commands
 import asyncio
 
+import random
+from random import choice
 
 def to_emoji(c):
     base = 0x1f1e6
@@ -13,6 +15,10 @@ class Poll(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.command()
+    async def choose(self, ctx, *options):
+        await ctx.send(f"{random.choice(options)}\n**Brought to you by Pro-Choice Industries™️**")
 
     @commands.command()
     @commands.guild_only()

@@ -228,6 +228,11 @@ class Song:
 		self.source = source
 		self.requester = source.requester
 
+		if self.source.duration:
+			h = self.source.duration
+		else:
+			h = 'Live'
+
 	def create_embed(self):
 		embed = (discord.Embed(title='Now playing',
 						description='```css\n{0.source.title}\n```'.format(

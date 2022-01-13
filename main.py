@@ -12,6 +12,8 @@ import asyncio
 import discord
 from cogwatch import Watcher
 from discord import *
+import random
+from random import choice
 from discord.ext import commands
 
 load_dotenv()
