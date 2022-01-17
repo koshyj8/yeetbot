@@ -33,7 +33,7 @@ from discord.ext.commands.converter import MemberConverter
 emojis_c = ['✅', '❌', '🤷', '👍', '👎', '⏮', '🛑']
 emojis_w = ['✅', '❌']
 
-
+from core.utils.controller import HangmanGame
 aki = Akinator()
 
 
@@ -827,6 +827,26 @@ class Game(commands.Cog):
 
         await ctx.send(embed=embed)
 
+    @commands.command()
+    async def hm(self, ctx, guess: str):
+        player_id = ctx.author.id
+        hangman_instance = HangmanGame()
+        game_over, won = hangman_instance.run(player_id, guess)
+
+        if game_over:
+            game_over_message = "You did not win"
+            if won:
+                game_over_message = "Congrats you won!!"
+
+            game_over_message = game_over_message + \
+                " The word was %s" % hangman_instance.get_secret_word()
+
+            await hangman_instance.reset(player_id)
+            await ctx.send(game_over_message)
+
+        else:
+            await ctx.send("Progress: %s" % hangman_instance.get_progress_string())
+            await ctx.send("Guess so far: %s" % hangman_instance.get_guess_string())
 
 def setup(bot):
     bot.add_cog(Game(bot))

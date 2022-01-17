@@ -13,6 +13,7 @@ import praw
 from praw import reddit
 import randfacts
 from collections import namedtuple
+
 import re
 import random
 import re
@@ -26,6 +27,7 @@ from core.utils.pagin import paginator, quickpaginator
 import sr_api
 api = sr_api.Client(os.getenv("SR_API"))
 
+from datetime import datetime
 
 API_KEY = os.getenv('APIKEY')
 
@@ -48,7 +50,7 @@ class API(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    async def sub(self, ctx, *, sub):
+    async def sub(self, ctx, *, sub):  
         async with aiohttp.ClientSession() as session:
             async with session.get(f"https://www.reddit.com/r/{sub}/hot.json") as response:
                 j = await response.json()
@@ -257,42 +259,6 @@ class API(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    """@commands.command(name='urbandictionary', aliases=["urban", "ub"])
-	async def _urbandictionary(self, ctx, *, query):
-		async with aiohttp.ClientSession() as cs:
-			async with cs.get("http://api.urbandictionary.com/v0/define", params={"term": query}) as r:
-				jsondata = await r.json()
-
-		BRACKETS = re.compile(r"(\[(.+?)\])")
-
-		if len(jsondata['list']) == 0:
-			fembed = discord.Embed(title='Urban Dictionary Error', color = discord.Color.random())
-			fembed.add_field(name='Not a valid word',value='Could not find any results.')
-			return await ctx.send(embed=fembed)
-
-		def repl(m):
-			word = m.group(2)
-			replaced = word.replace(' ', '%20')
-			return f"[{word}](https://www.urbandictionary.com/define.php?term={replaced})"
-
-		embeds = []
-		for entry in jsondata["list"]:
-			description = BRACKETS.sub(repl, entry["definition"])
-			embed = discord.Embed(title=entry["word"], url=entry["permalink"], description=description, timestamp=discord.utils.parse_time(
-				entry["written_on"][0:-1]), colour=discord.Color.random())
-			sexer = BRACKETS.sub(repl, entry["example"])
-			embed.add_field(name='Example:', value=sexer)
-			embed.set_footer(text=f"By {entry['author']}")
-			embeds.append(input(embed, None))
-
-		pages = paginator(ctx, remove_reactions=True)
-		pages.add_reaction("\U000023ea", "first")
-		pages.add_reaction("\U000025c0", "back")
-		pages.add_reaction("❌", "delete")
-		pages.add_reaction("\U000025b6", "next")
-		pages.add_reaction("\U000023e9", "last")
-		await pages.send(embeds)"""
-
     @commands.command()
     async def weather(self, ctx, *, city: str = None):
         '''Get the weather of any place on Earth.'''
@@ -404,6 +370,94 @@ class API(commands.Cog):
         pages.add_reaction("\U000025b6", "next")
         pages.add_reaction("\U000023e9", "last")
         await pages.send(embeds)
+
+    @commands.command()
+    async def corona(self, ctx, category='Hot'):
+
+        icon = {'Hot': '🔥',
+                'New': '🆕',
+                'Top': '🔝'}
+        left = '⬅️'
+        right = '➡️'
+        reactions = [left, right]
+
+        category = category.title()
+
+        if category == 'Hot':
+            submissions = list(reddit.subreddit('Coronavirus').hot(limit=5))
+        elif category == 'New':
+            submissions = list(reddit.subreddit('Coronavirus').new(limit=5))
+        elif category == 'Top':
+            submissions = list(reddit.subreddit('Coronavirus').top(limit=5))
+        else:
+            submissions = list(reddit.subreddit('Coronavirus').new(limit=5))
+
+        index = 1
+
+        description = f'{icon[category]} {category} Posts'
+        timestamp = datetime.utcnow()
+        url = 'https://www.reddit.com/r/Coronavirus/'
+        embed = discord.Embed(title='/r/Coronavirus', description=description,
+                              colour=discord.Colour.red(), timestamp=timestamp, url=url)
+
+        for s in submissions:
+            embed.add_field(name=f'⬆️ **{s.score}** | Posted by u/{s.author} on {datetime.fromtimestamp(s.created).strftime("%m/%d/%y %H:%M:%S")}',
+                            value=f'[{s.title}](https://www.reddit.com{s.permalink})', inline=False)
+
+        embed.set_thumbnail(
+            url='https://styles.redditmedia.com/t5_2x4yx/styles/communityIcon_ex5aikhvi3i41.png')
+        embed.set_footer(
+            text=f'Requested by {ctx.message.author} • Page {index} of 3', icon_url=ctx.message.author.avatar_url)
+        msg = await ctx.send(embed=embed)
+
+        def predicate(message, l, r):
+            def check(reaction, user):
+                if reaction.message.id != message.id or user == self.bot.user:
+                    return False
+                if l and reaction.emoji == left and user == ctx.message.author:
+                    return True
+                if r and reaction.emoji == right and user == ctx.message.author:
+                    return True
+                return False
+            return check
+
+        while True:
+            for reaction in reactions:
+                await msg.add_reaction(reaction)
+            l = index != 1
+            r = index != 3
+            try:
+                react, self.user = await self.bot.wait_for('reaction_add', check=predicate(msg, l, r), timeout=120)
+            except asyncio.TimeoutError:
+                return
+
+            if react.emoji == left and index > 1:
+                index -= 1
+                await msg.remove_reaction(left, self.user)
+            elif react.emoji == right and index < 3:
+                index += 1
+                await msg.remove_reaction(right, self.user)
+
+            embed.clear_fields()
+            number = index * 5
+
+            if category == 'Hot':
+                submissions = list(reddit.subreddit(
+                    'Coronavirus').hot(limit=15))[number-5:number]
+            elif category == 'New':
+                submissions = list(reddit.subreddit(
+                    'Coronavirus').new(limit=15))[number-5:number]
+            elif category == 'Top':
+                submissions = list(reddit.subreddit(
+                    'Coronavirus').top(limit=15))[number-5:number]
+
+            for s in submissions:
+                embed.add_field(name=f'⬆️ **{s.score}** | Posted by u/{s.author} on {datetime.fromtimestamp(s.created).strftime("%m/%d/%y %H:%M:%S")}',
+                                value=f'[{s.title}](https://www.reddit.com{s.permalink})', inline=False)
+
+            embed.set_footer(
+                text=f'Requested by {ctx.message.author} • Page {index} of 3', icon_url=ctx.message.author.avatar_url)
+            await msg.edit(embed=embed)
 
 
 def setup(bot):
