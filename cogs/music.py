@@ -38,7 +38,7 @@ class MusicPlayer(commands.Cog, name='Music'):
 
 	def get_user_voice_state(self, ctx):
 		state = self.voice_states.get(ctx.guild.id)
-		if not state:
+		if not state or not state.exists:
 			state = VoiceStateController(self.bot, ctx)
 			self.voice_states[ctx.guild.id] = state
 
@@ -185,7 +185,7 @@ class MusicPlayer(commands.Cog, name='Music'):
 		"""Vote to skip a song. The requester can automatically skip.
 		3 skip votes are needed for the song to be skipped.
 		"""
-
+		members = len(ctx.author.voice.channel.voice_states.keys())
 		if not ctx.voice_state.is_playing:
 			return await ctx.send('Not playing any music right now...')
 
@@ -198,11 +198,11 @@ class MusicPlayer(commands.Cog, name='Music'):
 			ctx.voice_state.skip_votes.add(voter.id)
 			total_votes = len(ctx.voice_state.skip_votes)
 
-			if total_votes >= 3:
+			if total_votes >= 1/2 * members:
 				await ctx.message.add_reaction('⏭')
 				ctx.voice_state.skip()
 			else:
-				await ctx.send('Skip vote added, currently at **{}/3**'.format(total_votes))
+				await ctx.send(f'Skip vote added, currently at **{total_votes}/{members-1}**')
 
 		else:
 			await ctx.send('You have already voted to skip this song.')
