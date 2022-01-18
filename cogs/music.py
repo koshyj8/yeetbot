@@ -34,7 +34,19 @@ def humanize_activity(activity_type: discord.ActivityType):
 class MusicPlayer(commands.Cog, name='Music'):
 	def __init__(self, bot: commands.Bot):
 		self.bot = bot
-		self.voice_states = {}
+		self._ctx = ctx
+
+		self.current = None
+		self.voice = None
+		self.next = asyncio.Event()
+		self.songs = SongQueue()
+
+		self._loop = False
+		self._volume = 0.5
+		self.skip_votes = set()
+
+		self.audio_player = bot.loop.create_task(self.audio_player_task())
+
 
 	def get_user_voice_state(self, ctx):
 		state = self.voice_states.get(ctx.guild.id)
