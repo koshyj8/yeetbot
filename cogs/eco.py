@@ -609,7 +609,7 @@ class Economy(commands.Cog):
                 await cursor.execute(f'SELECT item{item_id} FROM user WHERE member_id = {ctx.author.id}')
                 row1 = await cursor.fetchone()
                 await connection.commit()
-        price, name = row[1] * amount, row[0]
+        price, name = row[1] *amount, row[0]
         async with aiosqlite.connect("database\eco.sqlite") as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute("SELECT wallet FROM user WHERE member_id = ?", (ctx.author.id,))
