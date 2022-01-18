@@ -337,7 +337,7 @@ class API(commands.Cog):
         await ctx.send('https://www.youtube.com/watch?v=' + search_results[0])
 
     @commands.command()
-    async def galaxy(self, ctx, year=None, month=None, day=None):
+    async def galaxy(self, ctx, year = None, month = None, day = None):
         '''Get a image of the galaxy'''
         if year == None and month == None and day == None:
             url = f"https://api.nasa.gov/planetary/apod?api_key={spaceapi}&count=10"
@@ -346,30 +346,18 @@ class API(commands.Cog):
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as r:
                 info = await r.json()
-        await session.close()
+        print(info['title'])
 
         print('1')
 
-        embeds = []
+        embed = discord.Embed(title='NASA Image of the Day',
+                                color=discord.Color.random())
+        embed.add_field(name=info['title'], value=info['explanation'])
+        embed.set_image(url=info['hdurl'])
+        embed.set_footer(text=info['date'])
 
-        for entry in info:
-            embed = discord.Embed(title='NASA Image of the Day',
-                                  color=discord.Color.random())
-            embed.add_field(name=entry['title'], value=entry['explanation'])
-            embed.set_image(url=entry['hdurl'])
-            embed.set_footer(text=entry['date'])
 
-            embeds.append(input(embed, None))
-
-        print('1')
-
-        pages = paginator(ctx, remove_reactions=True)
-        pages.add_reaction("\U000023ea", "first")
-        pages.add_reaction("\U000025c0", "back")
-        pages.add_reaction("❌", "delete")
-        pages.add_reaction("\U000025b6", "next")
-        pages.add_reaction("\U000023e9", "last")
-        await pages.send(embeds)
+        await ctx.send(embed = embed)
 
     @commands.command()
     async def corona(self, ctx, category='Hot'):

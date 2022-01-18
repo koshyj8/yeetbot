@@ -14,6 +14,18 @@ class Owner(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx, error):
+        print("\nCalled on_command_error")  # for
+        print("ERROR: "+str(error)) 	     # debugging
+        embed = discord.Embed(color=discord.Colour.from_rgb(255, 192, 203))
+
+        if isinstance(error, commands.CommandNotFound):
+            return
+        if isinstance(error, commands.MissingRequiredArgument):
+            embed.description = "Error: Missing required argument(s). Try again. ⛔"
+        await ctx.send(embed=embed)
+
     @commands.group(aliases=['p', 'pr'], brief='Changes the bot\'s status')
     @commands.is_owner()
     async def status(self, ctx):
