@@ -15,10 +15,11 @@ from discord import *
 import random
 from random import choice
 from discord.ext import commands
-
+from discord_slash import SlashCommand
 load_dotenv()
 
 start_time = time.time()
+
 
 intents = discord.Intents.all()
 intents.presences = True
@@ -27,6 +28,7 @@ intents.presences = True
 ending_note = "For more info about a command and how to use it, use !help <command> ."
 
 client = commands.Bot(command_prefix = '!',intents=intents)
+slash = SlashCommand(client)
 color = discord.Color.dark_gold()
 
 

@@ -33,7 +33,7 @@ from discord.ext.commands.converter import MemberConverter
 emojis_c = ['✅', '❌', '🤷', '👍', '👎', '⏮', '🛑']
 emojis_w = ['✅', '❌']
 
-from core.utils.controller import HangmanGame
+
 aki = Akinator()
 
 
@@ -41,22 +41,6 @@ class Game(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.trivia = TriviaClient()
-    #    self.owner = member
- #   self.members = [member]
-  # self.possibleCards = []
-   # self.players = []
-        #self.wagers = {}
-        #self.roundCount = 0
-        #self.gameID = None
-        #self.cardToBeat = None
-        #self.cardToBeatPlayerRef = None
-        #self.startTrick = True
-        #self.roomNum = None
-        #self.room = None
-        #self.winner = []
-        #self.friendly = False
-        #self.startRound = True
-        #self.ctx = None
 
     @commands.command(name='2048')
     async def twenty(self, ctx):
@@ -75,68 +59,6 @@ class Game(commands.Cog):
                    3: "scissors"}
 
         reactions = {}
-
-    """@commands.command(name="rps")
-	async def rock_paper_scissors(self, context):
-		choices = {
-			0: "rock",
-			1: "paper",
-			2: "scissors"
-		}
-		reactions = {
-			"🪨": 0,
-			"🧻": 1,
-			"✂": 2
-		}
-		embed = discord.Embed(
-			title="Rock Paper Scissors", color=discord.Color.random())
-		embed.set_author(name=context.author.display_name,
-						 icon_url=context.author.avatar_url)
-		choose_message = await context.send(embed=embed)
-		for emoji in reactions:
-			await choose_message.add_reaction(emoji)
-
-		def check(reaction, user):
-			return user == context.message.author and str(reaction) in reactions
-
-		try:
-			reaction, user = await self.bot.wait_for("reaction_add", timeout=10, check=check)
-
-			user_choice_emote = reaction.emoji
-			user_choice_index = reactions[user_choice_emote]
-
-			bot_choice_emote = random.choice(list(reactions.keys()))
-			bot_choice_index = reactions[bot_choice_emote]
-
-			result_embed = discord.Embed(color=discord.Color.random())
-			result_embed.set_author(name=context.author.display_name,
-									icon_url=context.author.avatar_url)
-			await choose_message.clear_reactions()
-
-			if user_choice_index == bot_choice_index:
-				result_embed.description = f"`That's a Tie!`\nYou chose {user_choice_emote} and I chose {bot_choice_emote}."
-				result_embed.colour = discord.color.red()
-			elif user_choice_index == 0 and bot_choice_index == 2:
-				result_embed.description = f"`You win!`\nYou chose {user_choice_emote} and I chose {bot_choice_emote}."
-				result_embed.colour = discord.color.green()
-			elif user_choice_index == 1 and bot_choice_index == 0:
-				result_embed.description = f"`You win!`\nYou chose {user_choice_emote} and I chose {bot_choice_emote}."
-				result_embed.colour = discord.color.green()
-			elif user_choice_index == 2 and bot_choice_index == 1:
-				result_embed.description = f"`You win!`\nYou chose {user_choice_emote} and I chose {bot_choice_emote}."
-				result_embed.colour = discord.color.green()
-			else:
-				result_embed.description = f"`I win!`\nYou chose {user_choice_emote} and I chose {bot_choice_emote}."
-				result_embed.colour = discord.Color.random()
-				await choose_message.add_reaction("🇱")
-			await choose_message.edit(embed=result_embed)
-		except asyncio.exceptions.TimeoutError:
-			await choose_message.clear_reactions()
-			timeout_embed = discord.Embed(
-				title="Time's Up!", color=discord.Color.random())
-			timeout_embed.set_author(
-				name=context.author.display_name, icon_url=context.author.avatar_url)
-			await choose_message.edit(embed=timeout_embed)"""
 
     @commands.command(name='akinator')
     @commands.max_concurrency(1, per=BucketType.default)
@@ -827,26 +749,6 @@ class Game(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command()
-    async def hm(self, ctx, guess: str):
-        player_id = ctx.author.id
-        hangman_instance = HangmanGame()
-        game_over, won = hangman_instance.run(player_id, guess)
-
-        if game_over:
-            game_over_message = "You did not win"
-            if won:
-                game_over_message = "Congrats you won!!"
-
-            game_over_message = game_over_message + \
-                " The word was %s" % hangman_instance.get_secret_word()
-
-            await hangman_instance.reset(player_id)
-            await ctx.send(game_over_message)
-
-        else:
-            await ctx.send("Progress: %s" % hangman_instance.get_progress_string())
-            await ctx.send("Guess so far: %s" % hangman_instance.get_guess_string())
-
+        
 def setup(bot):
     bot.add_cog(Game(bot))

@@ -1,3 +1,4 @@
+from discord_slash import cog_ext, SlashContext
 from animec import *
 import animec
 from typing import *
@@ -44,13 +45,12 @@ reddit = praw.Reddit(client_id=os.getenv("REDDIT_CLIENT_ID"),
 spaceapi = os.getenv("SPACE_API_KEY")
 api_key = os.getenv("TV_API")
 
-
 class API(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
     @commands.command()
-    async def sub(self, ctx, *, sub):  
+    async def sub(self, ctx: SlashContext, *, sub):
         async with aiohttp.ClientSession() as session:
             async with session.get(f"https://www.reddit.com/r/{sub}/hot.json") as response:
                 j = await response.json()
@@ -64,9 +64,9 @@ class API(commands.Cog):
             text=f"Requested by {ctx.message.author}", icon_url=ctx.message.author.avatar_url)
         await ctx.send(embed=em)
 
-    @commands.command(name='meme')
+    @commands.command()
     @commands.bot_has_permissions(embed_links=True)
-    async def meme(self, ctx):
+    async def meme(self, ctx: SlashContext):
         '''
         Random meme generator.
         '''
