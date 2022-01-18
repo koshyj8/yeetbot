@@ -459,6 +459,5 @@ class API(commands.Cog):
                 text=f'Requested by {ctx.message.author} • Page {index} of 3', icon_url=ctx.message.author.avatar_url)
             await msg.edit(embed=embed)
 
-
 def setup(bot):
     bot.add_cog(API(bot))

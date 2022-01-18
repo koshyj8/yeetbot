@@ -153,17 +153,13 @@ class MusicPlayer(commands.Cog, name='Music'):
 
 	@commands.command(name='skip')
 	@commands.has_role("DJ")
-	async def _skip(self, ctx):
+	async def _skip(self, ctx: commands.Context):
 		"""Vote to skip a song. The requester can automatically skip.
+		3 skip votes are needed for the song to be skipped.
 		"""
-		voice_state = ctx.author.voice
-
-		if voice_state is None:
-			# Exiting if the user is not in a voice channel
-			return await ctx.send('`You need to be in a voice channel to use this command`')
 
 		if not ctx.voice_state.is_playing:
-			return await ctx.send('`I am not playing anything right now.`')
+			return await ctx.send('Not playing any music right now...')
 
 		voter = ctx.message.author
 		if voter == ctx.voice_state.current.requester:
@@ -174,18 +170,15 @@ class MusicPlayer(commands.Cog, name='Music'):
 			ctx.voice_state.skip_votes.add(voter.id)
 			total_votes = len(ctx.voice_state.skip_votes)
 
-			percentagereq = 75
-			percentage = (total_votes/len(members))*100
-
-			if percentage >= 60:
+			if total_votes >= 3:
 				await ctx.message.add_reaction('⏭')
 				ctx.voice_state.skip()
 			else:
 				await ctx.send('Skip vote added, currently at **{}/3**'.format(total_votes))
 
 		else:
-			await ctx.send('`You have already voted to skip this song.`')
-
+			await ctx.send('You have already voted to skip this song.')
+   
 	@commands.command(name='queue',aliases=['q'])
 	async def _queue(self, ctx, *, page: int = 1):
 		"""Shows the player's queue.
