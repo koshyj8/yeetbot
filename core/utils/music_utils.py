@@ -202,6 +202,72 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
 		return cls(ctx, discord.FFmpegPCMAudio(info['url'], **cls.FFMPEG_OPTIONS), data=info)
 
+
+	@classmethod
+	async def search_source(self, ctx: commands.Context, search: str, *, loop: asyncio.BaseEventLoop = None, bot):
+		self.bot = bot
+		channel = ctx.channel
+		loop = loop or asyncio.get_event_loop()
+
+		self.search_query = '%s%s:%s' % ('ytsearch', 10, ''.join(search))
+
+		partial = functools.partial(self.ytdl.extract_info, self.search_query, download=False, process=False)
+		info = await loop.run_in_executor(None, partial)
+
+		self.search = {}
+		self.search["title"] = f'Search results for:\n**{search}**'
+		self.search["type"] = 'rich'
+		self.search["color"] = 7506394
+		self.search["author"] = {'name': f'{ctx.author.name}', 'url': f'{ctx.author.avatar_url}',
+								'icon_url': f'{ctx.author.avatar_url}'}
+
+		lst = []
+		count = 0
+		e_list = []
+		for e in info['entries']:
+			# lst.append(f'`{info["entries"].index(e) + 1}.` {e.get("title")} **[{YTDLSource.parse_duration(int(e.get("duration")))}]**\n')
+			VId = e.get('id')
+			VUrl = 'https://www.youtube.com/watch?v=%s' % (VId)
+			lst.append(f'`{count + 1}.` [{e.get("title")}]({VUrl})\n')
+			count += 1
+			e_list.append(e)
+
+		lst.append('\n**Type a number to make a choice, Type `cancel` to exit**')
+		self.search["description"] = "\n".join(lst)
+
+		em = discord.Embed.from_dict(self.search)
+		await ctx.send(embed=em, delete_after=45.0)
+
+		def check(msg):
+			return msg.content.isdigit() == True and msg.channel == channel or msg.content == 'cancel' or msg.content == 'Cancel'
+
+		try:
+			m = await self.bot.wait_for('message', check=check, timeout=45.0)
+
+		except asyncio.TimeoutError:
+			rtrn = 'timeout'
+
+		else:
+			if m.content.isdigit() == True:
+				sel = int(m.content)
+				if 0 < sel <= 10:
+					for key, value in info.items():
+						if key == 'entries':
+							"""data = value[sel - 1]"""
+							VId = e_list[sel-1]['id']
+							VUrl = 'https://www.youtube.com/watch?v=%s' % (VId)
+							partial = functools.partial(self.ytdl.extract_info, VUrl, download=False)
+							data = await loop.run_in_executor(None, partial)
+					rtrn = self(ctx, discord.FFmpegPCMAudio(data['url'], **self.FFMPEG_OPTIONS), data=data)
+				else:
+					rtrn = 'sel_invalid'
+			elif m.content == 'cancel':
+				rtrn = 'cancel'
+			else:
+				rtrn = 'sel_invalid'
+
+		return rtrn
+	
 	@staticmethod
 	def parse_duration(duration: int):
 		minutes, seconds = divmod(duration, 60)

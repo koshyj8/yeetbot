@@ -34,19 +34,7 @@ def humanize_activity(activity_type: discord.ActivityType):
 class MusicPlayer(commands.Cog, name='Music'):
 	def __init__(self, bot: commands.Bot):
 		self.bot = bot
-		self._ctx = ctx
-
-		self.current = None
-		self.voice = None
-		self.next = asyncio.Event()
-		self.songs = SongQueue()
-
-		self._loop = False
-		self._volume = 0.5
-		self.skip_votes = set()
-
-		self.audio_player = bot.loop.create_task(self.audio_player_task())
-
+		self.voice_states = {}
 
 	def get_user_voice_state(self, ctx):
 		state = self.voice_states.get(ctx.guild.id)
@@ -68,6 +56,34 @@ class MusicPlayer(commands.Cog, name='Music'):
 
 	async def cog_before_invoke(self, ctx):
 		ctx.voice_state = self.get_user_voice_state(ctx)
+
+	@commands.command(name='musicsearch')
+	async def _search(self, ctx: commands.Context, *, search: str):
+		"""Searches youtube.
+		It returns an imbed of the first 10 results collected from youtube.
+		Then the user can choose one of the titles by typing a number
+		in chat or they can cancel by typing "cancel" in chat.
+		Each title in the list can be clicked as a link.
+		"""
+		async with ctx.typing():
+			try:
+				source = await YTDLSource.search_source(ctx, search, loop=self.bot.loop, bot=self.bot)
+			except YTDLError as e:
+				await ctx.send('An error occurred while processing this request: {}'.format(str(e)))
+			else:
+				if source == 'sel_invalid':
+					await ctx.send('Invalid selection')
+				elif source == 'cancel':
+					await ctx.send(':white_check_mark:')
+				elif source == 'timeout':
+					await ctx.send(':alarm_clock: **Time\'s up bud**')
+				else:
+					if not ctx.voice_state.voice:
+						await ctx.invoke(self._join)
+
+					song = Song(source)
+					await ctx.voice_state.songs.put(song)
+					await ctx.send('Enqueued {}'.format(str(source)))
 
 	@commands.command(name='join', invoke_without_subcommand=True)
 	async def _join(self, ctx):
@@ -190,7 +206,7 @@ class MusicPlayer(commands.Cog, name='Music'):
 
 		else:
 			await ctx.send('You have already voted to skip this song.')
-   
+
 	@commands.command(name='queue',aliases=['q'])
 	async def _queue(self, ctx, *, page: int = 1):
 		"""Shows the player's queue.
@@ -212,6 +228,19 @@ class MusicPlayer(commands.Cog, name='Music'):
 		embed = (discord.Embed(description='**{} tracks:**\n\n{}'.format(len(ctx.voice_state.songs), queue))
 				 .set_footer(text='Viewing page {}/{}'.format(page, pages)))
 		await ctx.send(embed=embed)
+
+	@commands.command(name='loop')
+	async def _loop(self, ctx: commands.Context):
+		"""Loops the currently playing song.
+		Invoke this command again to unloop the song.
+		"""
+
+		if not ctx.voice_state.is_playing:
+			return await ctx.send('Nothing being played at the moment.')
+
+		# Inverse boolean value to loop and unloop.
+		ctx.voice_state.loop = not ctx.voice_state.loop
+		await ctx.message.add_reaction('✅')
 
 	@commands.command(name='shuffle', aliases=['shuff'])
 	@commands.has_role("DJ")
@@ -369,8 +398,6 @@ class MusicPlayer(commands.Cog, name='Music'):
 		track_url = f"https://open.spotify.com/track/{activity.track_id}"
 		await ctx.send(track_url)
 
-
-
 	@commands.Cog.listener()
 	async def on_voice_state_update(member, before, after):
 		if not before.channel and after.channel:
@@ -406,6 +433,24 @@ class MusicPlayer(commands.Cog, name='Music'):
 				await ctx.voice_state.songs.put(song)
 
 				await ctx.send('Enqueued {}'.format(str(source)))
+
+	@_join.before_invoke
+	@_play.before_invoke
+	@_remove.before_invoke
+	@_shuffle.before_invoke
+	@_loop.before_invoke
+	@_queue.before_invoke
+	@_skip.before_invoke
+	@_pause.before_invoke
+	@_resume.before_invoke
+	@_leave.before_invoke
+	async def ensure_voice_state(self, ctx: commands.Context):
+		if not ctx.author.voice or not ctx.author.voice.channel:
+			raise commands.CommandError('`You are not connected to any voice channel.`')
+
+		if ctx.voice_client:
+			if ctx.voice_client.channel != ctx.author.voice.channel:
+				raise commands.CommandError('`Bot is already in a voice channel.`')
 
 def setup(bot):
 	bot.add_cog(MusicPlayer(bot))
