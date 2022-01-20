@@ -57,7 +57,7 @@ class Economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=['lb'])
+    @commands.command(aliases=['lb'], brief = "Economy Leaderboard")
     async def leaderboard(self, ctx):
         async with aiosqlite.connect('database\eco.sqlite') as connection:
             async with connection.cursor() as cursor:
@@ -94,7 +94,7 @@ class Economy(commands.Cog):
                 await cursor.execute("CREATE TABLE IF NOT EXISTS shop (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, price INTEGER, available BOOL);")
                 await connection.commit()
 
-    @commands.command()
+    @commands.command(brief="Create an economy account")
     async def create(self, ctx):
         cursor = db.cursor()
         cursor.execute(
@@ -111,7 +111,7 @@ class Economy(commands.Cog):
         else:
             await ctx.send("`You already have an account.`")
 
-    @commands.command()
+    @commands.command(brief="Get a user's balance")
     async def bal(self, ctx, member: MemberConverter = None):
         member = member or ctx.author
 
@@ -131,7 +131,7 @@ class Economy(commands.Cog):
         embed.set_thumbnail(url=member.avatar_url)
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=['dep'])
+    @commands.command(aliases=['dep'], brief="Deposit money to the bank")
     async def deposit(self, ctx, amount):
         cursor = db.cursor()
         cursor.execute(
@@ -175,7 +175,7 @@ class Economy(commands.Cog):
         elif str(amount) != 'all':
             await ctx.send("`Please input an amount or use 'all'`")
 
-    @commands.command(aliases=['wd', 'with'])
+    @commands.command(aliases=['wd', 'with'], brief="Withdraw money from hands")
     async def withdraw(self, ctx, amount):
 
         cursor = db.cursor()
@@ -221,7 +221,7 @@ class Economy(commands.Cog):
         elif str(amount) != 'all':
             await ctx.send("`Please input an amount or use 'all'`")
 
-    @commands.command()
+    @commands.command(brief="Daily allowance")
     async def daily(self, ctx):
         cursor = db.cursor()
         cursor.execute(
@@ -262,7 +262,7 @@ class Economy(commands.Cog):
             else:
                 await ctx.send("`Its a 'daily' command for a reason.`")
 
-    @commands.command()
+    @commands.command(brief="Weekly allowance")
     async def weekly(self, ctx):
         cursor = db.cursor()
         cursor.execute(
@@ -303,7 +303,7 @@ class Economy(commands.Cog):
             else:
                 await ctx.send("`Its a 'weekly' command for a reason.`")
 
-    @commands.command()
+    @commands.command(brief="Work to earn money")
     async def work(self, ctx):
         cursor = db.cursor()
         cursor.execute(
@@ -360,7 +360,7 @@ class Economy(commands.Cog):
             else:
                 await ctx.send(f"`You can only work every 2 hours.`")
 
-    @commands.command()
+    @commands.command(brief = "Rob a user")
     async def rob(self, ctx, *, user_to_rob: MemberConverter):
         pattern = '%Y.%m.%d %H:%M:%S'
         time_now = datetime.datetime.now()
@@ -532,7 +532,7 @@ class Economy(commands.Cog):
 
     # TODO: Add inventory, shop, buy, sell, gambling etc.
 
-    @commands.group(invoke_without_command=True)
+    @commands.group(invoke_without_command=True, brief = "Shop-related commands")
     async def shop(self, ctx):
         async with aiosqlite.connect("database\eco.sqlite") as connection:
             async with connection.cursor() as cursor:
@@ -545,7 +545,7 @@ class Economy(commands.Cog):
                 name=row[1], value=f"**Cost**: {row[2]} \n**ID**: {row[0]}")
         await ctx.send(embed=embed)
 
-    @shop.command()
+    @shop.command(brief="Edit the price of an item", hidden = True)
     @commands.is_owner()
     async def edit(self, ctx, item_id, price):
         item_id = int(item_id)
@@ -556,7 +556,7 @@ class Economy(commands.Cog):
                 await connection.commit()
         await ctx.send(f"Successfully changed price of item `{item_id}` to `{price}`")
 
-    @shop.command()
+    @shop.command(brief="Approve an item for buying.", hidden = True)
     @commands.is_owner()
     async def enable(self, ctx, item_id):
         item_id = int(item_id)
@@ -571,7 +571,7 @@ class Economy(commands.Cog):
                 await cursor.execute("UPDATE shop SET available = ? WHERE id = ?", (True, item_id,))
                 await connection.commit()
 
-    @shop.command()
+    @shop.command(brief="Remove an item from the shop", hidden = True)
     @commands.is_owner()
     async def remove(self, ctx, item_id):
         item_id = int(item_id)
@@ -586,7 +586,7 @@ class Economy(commands.Cog):
                 await cursor.execute("UPDATE shop SET available = ? WHERE id = ?", (False, item_id,))
                 await connection.commit()
 
-    @shop.command()
+    @shop.command(brief = "Add an item to the shop")
     @commands.is_owner()
     async def add(self, ctx, name, price):
         price = int(price)
@@ -600,7 +600,7 @@ class Economy(commands.Cog):
                 await connection.commit()
         await ctx.send(f"Successfully added `{name}` to the shop at the price of `{price}`")
 
-    @shop.command()
+    @shop.command(brief="Buy an item from the shop")
     async def buy(self, ctx, item_id, amount=1):
         item_id, amount = int(item_id), int(amount)
         async with aiosqlite.connect("database\eco.sqlite") as connection:
@@ -627,7 +627,7 @@ class Economy(commands.Cog):
                 else:
                     await ctx.send("`You don't have enough coins.`")
 
-    @commands.command(aliases=['inv'])
+    @commands.command(aliases=['inv'], brief = "Show a member's inventory")
     async def inventory(self, ctx, user: MemberConverter = None):
         user = user or ctx.author
         async with aiosqlite.connect('database\eco.sqlite') as connection:
@@ -648,7 +648,7 @@ class Economy(commands.Cog):
                 new_row, user), delete_message_after=True)
             await pages.start(ctx)
 
-    @commands.command(aliases=['slots', 'bet'])
+    @commands.command(aliases=['slots', 'bet'], brief = "Bet money and play slots")
     async def slot(self, ctx, bet: int):
         """ Roll the slot machine """
         emojis = "💎👑💫🌟🎰🍇🎱🍒"
