@@ -399,12 +399,6 @@ class VoiceStateController:
 		if self.voice:
 			await self.voice.disconnect()
 			self.voice = None
-			try:
-				del self.bot.get_cog(
-					"MusicCogs").voice_states[self._ctx.guild.id]
-			except KeyError:
-				logging.info(
-					"Guild ID has been removed from bot's pool already.")
 
 
 LYRICS_URL = "https://some-random-api.ml/lyrics?title="

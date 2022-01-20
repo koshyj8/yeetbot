@@ -56,9 +56,12 @@ class API(commands.Cog):
                 j = await response.json()
 
         data = j["data"]["children"][random.randint(0, 25)]["data"]
+        print(data)
         image_url = data["url"]
         title = data["title"]
         em = discord.Embed(title=title, color=discord.Color.random())
+        if data['selftext']:
+            em.add_field(name='‎', value=data['selftext'])
         em.set_image(url=image_url)
         em.set_footer(
             text=f"Requested by {ctx.message.author}", icon_url=ctx.message.author.avatar_url)

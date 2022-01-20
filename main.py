@@ -8,6 +8,7 @@ import datetime,time
 from dotenv import load_dotenv
 from boto.s3.connection import S3Connection
 import asyncio
+from pretty_help import PrettyHelp
 
 import discord
 from cogwatch import Watcher
@@ -24,10 +25,13 @@ start_time = time.time()
 intents = discord.Intents.all()
 intents.presences = True
 
+client = commands.Bot(command_prefix='!', intents=intents,
+                      help_command=PrettyHelp())
 
-ending_note = "For more info about a command and how to use it, use !help <command> ."
+ending_note = f"For more info about a command and how to use it, use {client.command_prefix}help <command> ."
 
-client = commands.Bot(command_prefix = '!',intents=intents)
+client.help_command = PrettyHelp(ending_note=ending_note, color = discord.Color.random(), no_category = "Owner Commands", index_title = f"Yeetbot's commands")
+
 slash = SlashCommand(client)
 color = discord.Color.dark_gold()
 

@@ -181,7 +181,7 @@ class MusicPlayer(commands.Cog, name='Music'):
 
 	@commands.command(name='skip')
 	@commands.has_role("DJ")
-	async def _skip(self, ctx: commands.Context):
+	async def _skip(self, ctx):
 		"""Vote to skip a song. The requester can automatically skip.
 		3 skip votes are needed for the song to be skipped.
 		"""
@@ -190,17 +190,17 @@ class MusicPlayer(commands.Cog, name='Music'):
 			return await ctx.send('Not playing any music right now...')
 
 		voter = ctx.message.author
-		if voter == ctx.voice_state.current.requester:
-			await ctx.message.add_reaction('⏭')
+		if voter == ctx.voice_state.current.requester:		
 			ctx.voice_state.skip()
+			await ctx.message.add_reaction('⏭')
 
 		elif voter.id not in ctx.voice_state.skip_votes:
 			ctx.voice_state.skip_votes.add(voter.id)
 			total_votes = len(ctx.voice_state.skip_votes)
 
-			if total_votes >= 1/2 * members:
-				await ctx.message.add_reaction('⏭')
+			if total_votes > 1/2 * members:
 				ctx.voice_state.skip()
+				await ctx.message.add_reaction('⏭')
 			else:
 				await ctx.send(f'Skip vote added, currently at **{total_votes}/{members-1}**')
 
@@ -333,7 +333,8 @@ class MusicPlayer(commands.Cog, name='Music'):
 			await ctx.send(embed=embed)
 
 	@commands.command(name="lyrics")
-	async def lyrics_command(self, ctx, *, name: str):
+	async def lyrics_command(self, ctx, *, name: str = None):
+		name = name or Song.create_embed.title
 		async with aiohttp.request("GET", LYRICS_URL + name, headers={}) as r:
 			if not 200 <= r.status <= 299:
 				raise NoLyricsFound
