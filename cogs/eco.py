@@ -57,6 +57,10 @@ class Economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @commands.Cog.listener()
+    async def on_ready(self):
+        print(f'loaded cog: {self.__name__}')
+
     @commands.command(aliases=['lb'], brief = "Economy Leaderboard")
     async def leaderboard(self, ctx):
         async with aiosqlite.connect('database\eco.sqlite') as connection:

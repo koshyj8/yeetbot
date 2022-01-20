@@ -43,6 +43,10 @@ class Game(commands.Cog):
         self.bot = bot
         self.trivia = TriviaClient()
 
+    @commands.Cog.listener()
+    async def on_ready(self):
+        print(f'loaded cog: {self.__name__}')
+
     @commands.command(name='2048')
     async def twenty(self, ctx):
         """Play 2048 game"""

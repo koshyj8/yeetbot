@@ -80,6 +80,10 @@ class Moderation(commands.Cog):
         else:
             await ctx.edit(content="How many messages do you want to delete?", ttl=5)
 
+    @commands.Cog.listener()
+    async def on_ready(self):
+        print(f'loaded cog: {self.__name__}')
+
     @commands.group()
     @commands.guild_only()
     async def purge(self, ctx):

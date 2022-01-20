@@ -15,6 +15,10 @@ class Owner(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
+    async def on_ready(self):
+        print(f'loaded cog: {self.__name__}')
+
+    @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         print("\nCalled on_command_error")  # for
         print("ERROR: "+str(error)) 	     # debugging

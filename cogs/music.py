@@ -38,6 +38,10 @@ class MusicPlayer(commands.Cog, name='Music'):
 		self.bot = bot
 		self.voice_states = {}
 
+	@commands.Cog.listener()
+	async def on_ready(self):
+		print(f'loaded cog: {self.__name__}')
+
 	def get_user_voice_state(self, ctx):
 		state = self.voice_states.get(ctx.guild.id)
 		if not state or not state.exists:
