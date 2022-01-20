@@ -9,7 +9,7 @@ from cogwatch import watch
 
 
 class Owner(commands.Cog):
-    '''Commands only the bot owner can use'''
+    '''OWNER COMMANDS'''
 
     def __init__(self, bot):
         self.bot = bot

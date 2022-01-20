@@ -53,6 +53,7 @@ await_db = sqlite3.connect("database\eco.sqlite")
 
 
 class Economy(commands.Cog):
+    """ECONOMY COMMANDS"""
     def __init__(self, bot):
         self.bot = bot
 

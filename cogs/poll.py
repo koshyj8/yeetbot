@@ -11,7 +11,7 @@ def to_emoji(c):
 
 
 class Poll(commands.Cog):
-    """Poll Commands"""
+    """POLL COMMANDS"""
 
     def __init__(self, bot):
         self.bot = bot

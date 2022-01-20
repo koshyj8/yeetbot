@@ -25,8 +25,7 @@ start_time = time.time()
 intents = discord.Intents.all()
 intents.presences = True
 
-client = commands.Bot(command_prefix='!', intents=intents,
-                      help_command=PrettyHelp())
+client = commands.Bot(command_prefix='!', intents=intents, help_command=PrettyHelp())
 
 ending_note = f"For more info about a command and how to use it, use {client.command_prefix}help <command> ."
 

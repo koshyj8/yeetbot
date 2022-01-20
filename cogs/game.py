@@ -38,6 +38,7 @@ aki = Akinator()
 
 
 class Game(commands.Cog):
+    """GAME COMMANDS"""
     def __init__(self, bot):
         self.bot = bot
         self.trivia = TriviaClient()

@@ -118,7 +118,7 @@ langs = {
 	'zu': 'zulu'}
 
 class Translate(commands.Cog):
-	'''Translate commands'''
+	'''TRANSLATE COMMANDS'''
 	def __init__(self, bot ):
 		self.bot = bot
 		self.to_morse = {

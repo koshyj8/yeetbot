@@ -64,7 +64,7 @@ def getEmote(ctx, content):
 
 
 class Moderation(commands.Cog):
-    '''The admin commands for a discord server'''
+    '''MODERATION COMMANDS'''
 
     def __init__(self, bot):
         self.bot = bot

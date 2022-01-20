@@ -46,6 +46,7 @@ spaceapi = os.getenv("SPACE_API_KEY")
 api_key = os.getenv("TV_API")
 
 class API(commands.Cog):
+    """API COMMANDS"""
     def __init__(self, bot):
         self.bot = bot
 

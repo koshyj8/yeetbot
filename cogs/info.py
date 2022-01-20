@@ -71,7 +71,7 @@ def humanize_activity(activity_type: discord.ActivityType):
 
 
 class Information(commands.Cog):
-    '''Commands for information'''
+    '''INFO COMMANDS'''
 
     def __init__(self, bot):
         self.bot = bot

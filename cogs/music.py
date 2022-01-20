@@ -32,6 +32,8 @@ def humanize_activity(activity_type: discord.ActivityType):
 	return HUMANIZED_ACTIVITY.get(activity_type)
 
 class MusicPlayer(commands.Cog, name='Music'):
+	"""MUSIC COMMANDS"""
+	
 	def __init__(self, bot: commands.Bot):
 		self.bot = bot
 		self.voice_states = {}
