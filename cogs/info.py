@@ -76,8 +76,6 @@ class Information(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-
-
     @commands.command()
     async def calc(self, ctx):
         m = await ctx.send(content='Loading Calculator')

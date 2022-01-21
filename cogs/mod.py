@@ -68,7 +68,13 @@ class Moderation(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        
+    @commands.Cog.listener()
+    async def on_reaction_add(self, reaction, user):
+        if str(reaction.emoji) == "📌" """ and (user.reaction.guild_permissions.administrator or user.reaction.guild_permissions.manage_messages)""":
+            await self.bot.pin_message(reaction.message)
 
+            
     async def do_purge(self, ctx, limit, predicate):
         if limit:
             deleted = await ctx.channel.purge(limit=limit, before=ctx.message, check=predicate)
@@ -79,8 +85,6 @@ class Moderation(commands.Cog):
 
         else:
             await ctx.edit(content="How many messages do you want to delete?", ttl=5)
-
-
 
     @commands.group()
     @commands.guild_only()
