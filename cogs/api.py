@@ -22,8 +22,7 @@ import os
 from io import BytesIO
 import urllib.parse
 import urllib.request
-
-from core.utils.pagin import paginator, quickpaginator
+import ksoftapi
 
 import sr_api
 api = sr_api.Client(os.getenv("SR_API"))
@@ -49,8 +48,6 @@ class API(commands.Cog):
     """API COMMANDS"""
     def __init__(self, bot):
         self.bot = bot
-
-
 
     @commands.command()
     async def sub(self, ctx: SlashContext, *, sub):
