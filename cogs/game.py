@@ -43,8 +43,6 @@ class Game(commands.Cog):
         self.bot = bot
         self.trivia = TriviaClient()
 
-
-
     @commands.command(name='2048')
     async def twenty(self, ctx):
         """Play 2048 game"""
@@ -55,13 +53,42 @@ class Game(commands.Cog):
         """Play Minesweeper"""
         await mplay(ctx, columns, rows, bombs)
 
-    @commands.command()
-    async def rps(self, ctx, member: MemberConverter):
-        choices = {1: "rock",
-                   2: "paper",
-                   3: "scissors"}
+    @commands.command(aliases=['rockpaperscissors'])
+    async def rps(self, ctx, rps: str):
+        choices = ["rock", "paper", "scissors"]
+        cpu_choice = random.choice(choices)
+        em = discord.Embed(title="Rock Paper Scissors")
+        rps = rps.lower()
+        if rps == 'rock':
+            if cpu_choice == 'rock':
+                em.description = "It's a tie!"
+            elif cpu_choice == 'scissors':
+                em.description = "You win!"
+            elif cpu_choice == 'paper':
+                em.description = "You lose!"
 
-        reactions = {}
+        elif rps == 'paper':
+            if cpu_choice == 'paper':
+                em.description = "It's a tie!"
+            elif cpu_choice == 'rock':
+                em.description = "You win!"
+            elif cpu_choice == 'scissors':
+                em.description = "You lose!"
+
+        elif rps == 'scissors':
+            if cpu_choice == 'scissors':
+                em.description = "It's a tie!"
+            elif cpu_choice == 'paper':
+                em.description = "You win!"
+            elif cpu_choice == 'rock':
+                em.description = "You lose!"
+
+        else:
+            em.description = "Invalid Input"
+
+        em.add_field(name="Your Choice", value=rps)
+        em.add_field(name="Bot Choice", value=cpu_choice)
+        await ctx.send(embed=em)
 
     @commands.command(name='akinator')
     @commands.max_concurrency(1, per=BucketType.default)
@@ -727,31 +754,6 @@ class Game(commands.Cog):
                 x -= 1
 
             x += 1
-
-    @commands.command()
-    async def main(self, ctx):
-        db = sqlite3.connect(
-            r'C:\Users\HP\Desktop\yeetbot\cogs\db\fight.sqlite', timeout=3)
-        cursor = db.cursor()
-        cursor.execute(f"SELECT member_id,score FROM main ORDER BY score DESC")
-        embed = discord.Embed(title='Fight Leaderboard',
-                              color=discord.Color.random())
-        for i, pos in enumerate(cursor, start=1):
-            member_id, score = pos
-
-            if i == 1:
-                i = "🥇"
-            elif i == 2:
-                i = '🥈'
-            elif i == 3:
-                i = '🥉'
-
-            member = self.bot.get_user(member_id)
-            embed.add_field(name=f'{i}.{member}',
-                            value=f'{score} Points', inline=False)
-
-        await ctx.send(embed=embed)
-
         
 def setup(bot):
     bot.add_cog(Game(bot))

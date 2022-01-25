@@ -57,8 +57,6 @@ class Economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-
-
     @commands.command(aliases=['lb'], brief = "Economy Leaderboard")
     async def leaderboard(self, ctx):
         async with aiosqlite.connect('database\eco.sqlite') as connection:

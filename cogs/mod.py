@@ -195,6 +195,5 @@ class Moderation(commands.Cog):
         await webhook.send(message, username=author.display_name, avatar_url=author.avatar_url)
         await ctx.message.delete()
 
-
 def setup(bot):
     bot.add_cog(Moderation(bot))

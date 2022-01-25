@@ -76,34 +76,6 @@ class Information(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command()
-    async def calc(self, ctx):
-        m = await ctx.send(content='Loading Calculator')
-        expression = 'None'
-
-        e = discord.Embed(title='Calculator',
-                          color=discord.Color.random(), description=expression)
-        await m.edit(components=buttons, embed=e)
-        res = await self.bot.wait_for('button_click')
-        if res.author.id == ctx.author.id:
-            expression = res.message.embeds[0].description
-            if expression == 'None' or expression == 'An Error Occured':
-                expresion = ''
-            if res.component.label == 'Exit':
-                await res.respond(content='Calculator Closed', type=7)
-            elif res.component.label == '←':
-                expression = expression[:-1]
-            elif res.component.label == 'Clear':
-                expression = None
-            elif res.component.label == '=':
-                expression = calculator(expression)
-            else:
-                expression += res.component.label
-
-            f = discord.Embed(
-                title=f'{res.author.name}\'s Calculator | {ctx.author.id}', description=expression)
-            await res.respond(content='', embed=f, component=buttons, type=7)
-
     @commands.command(aliases=['uinfo', 'minfo', 'ui'], brief='Get information about a user\'s account')
     async def userinfo(self, ctx, member: MemberConverter = None):
         '''Get the user's information'''
@@ -269,7 +241,6 @@ class Information(commands.Cog):
                 embed.add_field(name=humanize_activity(
                     activity.type), value=f"{activity.name}", inline=False)
         await ctx.send(embed=embed)
-
 
 def setup(bot):
     bot.add_cog(Information(bot))
