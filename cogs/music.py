@@ -38,10 +38,6 @@ class MusicPlayer(commands.Cog, name='Music'):
 		self.bot = bot
 		self.voice_states = {}
 
-	@commands.Cog.listener()
-	async def on_ready(self):
-		print(f'loaded cog: {self.__name__}')
-
 	def get_user_voice_state(self, ctx):
 		state = self.voice_states.get(ctx.guild.id)
 		if not state or not state.exists:
@@ -142,6 +138,25 @@ class MusicPlayer(commands.Cog, name='Music'):
 
 		await ctx.send(embed=ctx.voice_state.current.create_embed())
 
+	@commands.command(name='volume')
+	@commands.has_role("DJ")
+	async def _volume(self, ctx: commands.Context, *, volume: int):
+		"""Configure volume of the bot"""
+		
+		if not ctx.author.voice or not ctx.author.voice.channel:
+			return await ctx.reply('`You are not connected to a voice channel.`')
+		
+		if not ctx.voice_state.is_playing:
+			return await ctx.reply('`Nothing is playing right now.`')
+		
+		if ctx.author.voice.channel != ctx.guild.me.voice.channel: 
+			return await ctx.reply('`You are not in the same voice channel.`')
+		if volume > 100 or volume < 0:
+			return await ctx.reply('`Volume must be between 0 and 100`')
+
+		ctx.voice_state.current.source.volume = volume / 100
+		await ctx.reply('`Bot volume set to {}%`'.format(volume))
+
 	@commands.command(name='pause')
 	async def _pause(self, ctx):
 		"""Pauses the currently playing song."""
@@ -167,7 +182,7 @@ class MusicPlayer(commands.Cog, name='Music'):
 		if voice_state is None:
 			# Exiting if the user is not in a voice channel
 			return await ctx.send('`You need to be in a voice channel to use this command`')
-		if ctx.voice_state.is_playing and ctx.voice_state.voice.is_paused():
+		if ctx.voice_state.is_playing or ctx.voice_state.voice.is_paused():
 			ctx.voice_state.voice.resume()
 			await ctx.send("`Song has been resumed.`")
 
@@ -327,6 +342,7 @@ class MusicPlayer(commands.Cog, name='Music'):
 				b = os.path.getsize(filename)
 				if b > 10000000:
 					await ctx.send('`That download is greater than 100MB, i wont send it, bitch`')
+					os.remove(filename)
 				else:
 					time = await ctx.send("`The download will be uploaded shortly.`")
 					await asyncio.sleep(10)
