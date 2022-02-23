@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import MemberConverter
 
+
 class Server(commands.Cog):
     """SERVER COMMANDS"""
     def __init__(self, bot):

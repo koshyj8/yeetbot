@@ -16,7 +16,6 @@ from discord import *
 import random
 from random import choice
 from discord.ext import commands
-from discord_slash import SlashCommand
 load_dotenv()
 
 start_time = time.time()
@@ -33,7 +32,6 @@ ending_note = f"For more info about a command and how to use it, use {client.com
 
 client.help_command = PrettyHelp(sort_commands = True, show_index = True, ending_note=ending_note, color = discord.Color.random(), no_category = "Owner Commands", index_title = f"Yeetbot's commands")
 
-slash = SlashCommand(client)
 color = discord.Color.dark_gold()
 
 

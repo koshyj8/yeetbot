@@ -1,34 +1,23 @@
-import sys
+import asyncio
 import os
-from core.utils.gamefuncs import *
+import random
 import sqlite3
-from aiotrivia import AiotriviaException, ResponseError, TriviaClient
-from discord import Embed
-from typing import List
-import asyncio
-import akinator
-from discord.ext import commands
-from discord.ext.commands import BucketType
-from typing import List, Union, Tuple, Dict
-from discord.ext import commands
-import random
-from random import randint
-import random
-from discord.ext import commands
-from discord.ext.commands import MemberConverter
-from time import time
-import asyncio
-
-from PIL import *
-
-import asyncio
-import random
+import sys
 from copy import deepcopy as dc
+from random import randint, shuffle
+from time import time
+from typing import Dict, List, Tuple, Union
 
-from random import shuffle
-from akinator.async_aki import Akinator
+import akinator
 import discord
+from aiotrivia import AiotriviaException, ResponseError, TriviaClient
+from akinator.async_aki import Akinator
+from core.utils.gamefuncs import *
+from discord import Embed
+from discord.ext import commands
+from discord.ext.commands import BucketType, MemberConverter
 from discord.ext.commands.converter import MemberConverter
+from PIL import *
 
 emojis_c = ['✅', '❌', '🤷', '👍', '👎', '⏮', '🛑']
 emojis_w = ['✅', '❌']

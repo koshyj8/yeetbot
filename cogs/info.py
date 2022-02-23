@@ -1,47 +1,15 @@
-from aiohttp.client import ClientSession
-import discord
-from discord import *
-from discord.ext import commands
-from discord.ext.commands.converter import MemberConverter
-from discord_components import *
-
-from discord.user import *
+import inspect
 import urllib.parse
 import urllib.request
 from math import floor
-import psutil
-import inspect
 
-buttons = [
-    [
-        Button(style=ButtonStyle.grey, label='1'),
-        Button(style=ButtonStyle.grey, label='2'),
-        Button(style=ButtonStyle.grey, label='3'),
-        Button(style=ButtonStyle.blue, label='x'),
-        Button(style=ButtonStyle.red, label='Exit'),
-    ],
-    [
-        Button(style=ButtonStyle.grey, label='4'),
-        Button(style=ButtonStyle.grey, label='5'),
-        Button(style=ButtonStyle.grey, label='6'),
-        Button(style=ButtonStyle.blue, label='+'),
-        Button(style=ButtonStyle.red, label='←'),
-    ],
-    [
-        Button(style=ButtonStyle.grey, label='7'),
-        Button(style=ButtonStyle.grey, label='8'),
-        Button(style=ButtonStyle.grey, label='9'),
-        Button(style=ButtonStyle.blue, label='+'),
-        Button(style=ButtonStyle.red, label='Clear'),
-    ],
-    [
-        Button(style=ButtonStyle.grey, label='00'),
-        Button(style=ButtonStyle.grey, label='0'),
-        Button(style=ButtonStyle.grey, label='.'),
-        Button(style=ButtonStyle.blue, label='-'),
-        Button(style=ButtonStyle.green, label='='),
-    ],
-]
+import discord
+from aiohttp.client import ClientSession
+from discord import *
+from discord.ext import commands
+from discord.ext.commands.converter import MemberConverter
+from discord.user import *
+from discord_components import *
 
 
 def calculator(exp):

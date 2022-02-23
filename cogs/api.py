@@ -1,30 +1,28 @@
-from discord_slash import cog_ext, SlashContext
-from animec import *
-import animec
-from typing import *
 import asyncio
-from datetime import datetime
-from aiohttp.client import ClientSession
-from discord.ext import commands
-import discord
 import datetime
-import aiohttp
-import requests
-import praw
-from praw import reddit
-import randfacts
-from collections import namedtuple
-
-import re
+import os
 import random
 import re
-import os
-from io import BytesIO
 import urllib.parse
 import urllib.request
-import ksoftapi
+from collections import namedtuple
+from datetime import datetime
+from io import BytesIO
+from typing import *
 
+import aiohttp
+import animec
+import discord
+import ksoftapi
+import praw
+import randfacts
+import requests
 import sr_api
+from aiohttp.client import ClientSession
+from animec import *
+from discord.ext import commands
+from praw import reddit
+
 api = sr_api.Client(os.getenv("SR_API"))
 
 from datetime import datetime
@@ -50,7 +48,7 @@ class API(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    async def sub(self, ctx: SlashContext, *, sub):
+    async def sub(self, ctx, *, sub):
         async with aiohttp.ClientSession() as session:
             async with session.get(f"https://www.reddit.com/r/{sub}/hot.json") as response:
                 j = await response.json()
@@ -69,7 +67,7 @@ class API(commands.Cog):
 
     @commands.command()
     @commands.bot_has_permissions(embed_links=True)
-    async def meme(self, ctx: SlashContext):
+    async def meme(self, ctx):
         '''
         Random meme generator.
         '''

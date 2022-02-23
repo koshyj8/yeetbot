@@ -38,6 +38,32 @@ class MusicPlayer(commands.Cog, name='Music'):
 		self.bot = bot
 		self.voice_states = {}
 
+	def _playlist(self, search: str):
+		"""Returns a dict with all Playlist entries"""
+		ydl_opts = {
+				'ignoreerrors': True,
+				'quit': True
+		}
+
+		with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+			playlist_dict = ydl.extract_info(search, download=False)
+
+			playlistTitle = playlist_dict['title']
+
+			playlist = dict()
+			for video in playlist_dict['entries']:
+				print()
+
+				if not video:
+					print('ERROR: Unable to get info. Coninuing...')
+					continue
+
+				for prop in ['id', 'title']:
+					print(prop, '--', video.get(prop))
+					playlist[video.get(
+						'title')] = 'https://www.youtube.com/watch?v=' + video.get('id')
+			return playlist, playlistTitle
+	
 	def get_user_voice_state(self, ctx):
 		state = self.voice_states.get(ctx.guild.id)
 		if not state or not state.exists:
@@ -296,24 +322,32 @@ class MusicPlayer(commands.Cog, name='Music'):
 		if not ctx.voice_state.voice:
 			await ctx.invoke(self._join)
 
-		async with ctx.typing():
-			try:
-				audio_source_type = IdentifyAudioSource.identify_source(search)
-				audio_source = AudioFactory.provide_source(audio_source_type)
-				if audio_source is not None:
-					# TODO ?
-					source = await audio_source.create_source(ctx, search, loop=self.bot.loop)
+		if search.__contains__('?list='):
+			async with ctx.typing():
+				playlist, playlistTitle = self._playlist(search)
+				print(playlist, playlistTitle)
+				for i in range(11):
+					_link = playlist.items()[i]
+					try:
+						source = await YTDLSource.create_source(ctx, _link, loop=self.bot.loop)
+					except YTDLError as e:
+						await ctx.send('An error occurred while processing this request: {}'.format(str(e)))
+					else:
+						song = Song(source)
+						await ctx.voice_state.songs.put(song)
+				await ctx.send(f'Enqueued `{playlist.__len__()}` songs from **{playlistTitle}**')
+		else:
+			async with ctx.typing():
+				try:
+					source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop)
+				except YTDLError as e:
+					await ctx.send('An error occurred while processing this request: {}'.format(str(e)))
 				else:
-					await ctx.send('`{} is not supported source.`'.format(str(search)))
-			except PlayerError as e:
-				await ctx.send('An error occurred while processing this request: {}'.format(str(e)))
-			else:
-				song = Song(source)
+					song = Song(source)
 
-				await ctx.voice_state.songs.put(song)
-
-				await ctx.send('Enqueued {}'.format(str(source)))
-
+					await ctx.voice_state.songs.put(song)
+					await ctx.send('Enqueued {}'.format(str(source)))
+    
 	@_join.before_invoke
 	@_play.before_invoke
 	async def ensure_voice_state(self, ctx):
