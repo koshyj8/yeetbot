@@ -1,31 +1,31 @@
-from discord.ext import commands
-import os
-from discord.ext.commands.converter import MemberConverter
-from dotenv.main import DotEnv
+import asyncio
+import datetime
 import json
-import asyncio
-import datetime,time
-from dotenv import load_dotenv
-from boto.s3.connection import S3Connection
-import asyncio
-from pretty_help import PrettyHelp
+import os
+import random
+import time
+from random import choice
 
 import discord
+from boto.s3.connection import S3Connection
 from cogwatch import Watcher
 from discord import *
-import random
-from random import choice
 from discord.ext import commands
+from discord.ext.commands.converter import MemberConverter
+from discord_slash import *
+from dotenv import load_dotenv
+from dotenv.main import DotEnv
+from pretty_help import PrettyHelp
+
 load_dotenv()
 
 start_time = time.time()
-
 
 intents = discord.Intents.all()
 intents.presences = True
 description = '''Yeetbot's owner commands'''
 client = commands.Bot(command_prefix='!', intents=intents, help_command=PrettyHelp(), description=description)
-
+slash = SlashCommand(client, sync_commands=True)
 ending_note = f"For more info about a command and how to use it, use {client.command_prefix}help <command> ."
 
 
@@ -35,21 +35,25 @@ client.help_command = PrettyHelp(sort_commands = True, show_index = True, ending
 color = discord.Color.dark_gold()
 
 
-@client.command(brief='Load any cog extension.')
-@commands.is_owner()
+@client.command(description='Load any cog extension.')
 async def load(ctx, extension):
-		client.load_extension(f'cogs.{extension}')
-		await ctx.send(f'`{extension}` `has been loaded.`')
+	if not ctx.author.guild_permissions.administrator:
+		return
+	client.load_extension(f'cogs.{extension}')
+	await ctx.send(f'`{extension}` `has been loaded.`')
 
-@client.command(brief='Unload any cog extension.')
-@commands.is_owner()
+
+@client.command(description='Unload any cog extension.')
 async def unload(ctx, extension):
+	if not ctx.author.guild_permissions.administrator:
+		return
 	client.unload_extension(f'cogs.{extension}')
 	await ctx.send(f'`{extension}` `has been unloaded.`')
 
-@client.command(brief='reload any cog extension.')
-@commands.is_owner()
+@client.command(description='Reload a cog.')
 async def reload(ctx, extension):
+	if not ctx.author.guild_permissions.administrator:
+		return
 	client.reload_extension(f'cogs.{extension}')
 	await ctx.send(f'`{extension}` `has been reloaded.`')
 
@@ -61,7 +65,7 @@ async def on_ready():
 	await watcher.start()
 
 
-@client.command()
+@client.command(description='Get how long the bot has been running.')
 async def uptime(ctx):
 	current_time = time.time()
 	difference = int(round(current_time - start_time))

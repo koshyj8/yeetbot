@@ -9,18 +9,18 @@ from collections import namedtuple
 from datetime import datetime
 from io import BytesIO
 from typing import *
-
+from discord_slash import *
 import aiohttp
 import animec
 import discord
-import ksoftapi
 import praw
 import randfacts
 import requests
 import sr_api
+from discord_slash import cog_ext, SlashContext
 from aiohttp.client import ClientSession
 from animec import *
-from discord.ext import commands
+from discord.ext import commands, tasks
 from praw import reddit
 
 api = sr_api.Client(os.getenv("SR_API"))
@@ -129,7 +129,7 @@ class API(commands.Cog):
                      value=f"https://reddit.com{random_sub.permalink}")
         await ctx.send(embed=em)
 
-    @commands.command(aliases=['tv'])
+    @commands.command()
     async def tvname(self, ctx, *, query):
         '''Get info about any movie or TV show using the OMDB API.'''
         url = f"http://www.omdbapi.com/?apikey={api_key}&t={query}&plot=full"
@@ -220,7 +220,7 @@ class API(commands.Cog):
                     fact = file['text']
                     await ctx.send(f"`{fact}`")
 
-    @commands.command(aliases=['xkcd', 'com'])
+    @commands.command()
     async def comic(self, ctx):
         '''Get a comic from xkcd.'''
         async with aiohttp.ClientSession() as session:
@@ -447,6 +447,10 @@ class API(commands.Cog):
             embed.set_footer(
                 text=f'Requested by {ctx.message.author} • Page {index} of 3', icon_url=ctx.message.author.avatar_url)
             await msg.edit(embed=embed)
+"""
+    @tasks.loop(3600):"""
+
+
 
 def setup(bot):
     bot.add_cog(API(bot))

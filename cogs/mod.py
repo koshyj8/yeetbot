@@ -1,6 +1,6 @@
 import asyncio
 import re
-
+from discord_slash import cog_ext, SlashContext
 import discord
 from discord import utils
 from discord.ext import commands
@@ -126,19 +126,19 @@ class Moderation(commands.Cog):
         """Remove messages sent by me."""
         await self.do_purge(ctx, search, lambda e: e.author == ctx.author)
 
-    @commands.group(brief='Lets an admin edit a channel', aliases=['ec', 'channeledit', 'ce'])
+    @commands.group(description='Lets an admin edit a channel')
     @commands.has_permissions(manage_channels=True)
     async def editchannel(self, ctx):
         if ctx.invoked_subcommand is None:
             pass
 
-    @editchannel.command(brief='Lets a user with permissions change the channel name.')
+    @editchannel.command(description='Lets a user with permissions change the channel name.')
     @commands.has_permissions(manage_channels=True)
     async def name(self, ctx, *, name):
         await ctx.channel.edit(name=name)
         await ctx.send(f'Channel Name has been set to {name}.')
 
-    @editchannel.command(brief='Toggle OFF/ON NSFW')
+    @editchannel.command(description='Toggle OFF/ON NSFW')
     async def nsfw(self, ctx, channel: discord.TextChannel = None):
         if ctx.channel_is_nsfw():
             await ctx.channel.edit(nsfw=False)
@@ -147,14 +147,14 @@ class Moderation(commands.Cog):
             await ctx.channel.edit(nsfw=True)
             await ctx.send(f"`Successfully toggled on NSFW`")
 
-    @commands.command(brief='Create a text channel', aliases=['channelcrea', 'creachannel', 'chancrea', 'cc'])
+    @commands.command(description='Create a text channel')
     @commands.has_permissions(administrator=True)
     async def createch(self, ctx, *, name):
         guild = ctx.message.guild
         await guild.create_text_channel(name)
         await ctx.send(f'Successfully created #{name}')
 
-    @commands.command(brief='Delete a text channel', aliases=['channeldel', 'delchan', 'chandel', 'cd'])
+    @commands.command(description='Delete a text channel')
     @commands.has_permissions(administrator=True)
     async def deletech(self, ctx, channel: discord.TextChannel):
         guild = ctx.message.guild
@@ -163,7 +163,7 @@ class Moderation(commands.Cog):
 
     @commands.bot_has_permissions(manage_emojis=True)
     @commands.has_permissions(manage_emojis=True)
-    @commands.command(aliases=['emoadd', 'addemoji', 'aemoji'])
+    @commands.command()
     async def emojiadd(self, ctx, name: str):
         if not ctx.message.attachments:
             raise commands.BadArgument(
@@ -178,7 +178,7 @@ class Moderation(commands.Cog):
 
         await ctx.send(f"{e} has been uploaded")
 
-    @commands.command(aliases=['sername', 'nameserver', 'ns', 'sn'])
+    @commands.command()
     @commands.has_permissions(administrator=True)
     async def servername(self, ctx, *, name):
         '''Change a server name'''
@@ -198,3 +198,4 @@ class Moderation(commands.Cog):
 
 def setup(bot):
     bot.add_cog(Moderation(bot))
+

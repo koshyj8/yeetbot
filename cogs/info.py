@@ -10,7 +10,7 @@ from discord.ext import commands
 from discord.ext.commands.converter import MemberConverter
 from discord.user import *
 from discord_components import *
-
+from discord_slash import cog_ext, SlashContext
 
 def calculator(exp):
     o = exp.replace('x', '*')
@@ -44,7 +44,7 @@ class Information(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=['uinfo', 'minfo', 'ui'], brief='Get information about a user\'s account')
+    @commands.command(description='Get information about a user\'s account')
     async def userinfo(self, ctx, member: MemberConverter = None):
         '''Get the user's information'''
 
@@ -138,7 +138,7 @@ class Information(commands.Cog):
     @commands.command()
     async def invite(self, ctx):
         '''Bot Invite Link'''
-        await ctx.send("`Bot Invite Link`", components=[Button(style=ButtonStyle.URL, label="Invite", url="https://discord.com/oauth2/authorize?client_id=760126094338031626&permissions=8&scope=bot")])
+        await ctx.send("`Bot Invite Link`", components=[Button(style=ButtonStyle.URL, label="Invite", url="https://discord.com/api/oauth2/authorize?client_id=760126094338031626&permissions=8&scope=bot%20applications.commands")])
 
     @commands.command()
     async def serverinvite(self, ctx):
@@ -161,7 +161,7 @@ class Information(commands.Cog):
         else:
             return await ctx.send(source_code)
 
-    @commands.command(aliases=['latency'])
+    @commands.command()
     async def ping(self, ctx):
         '''Send bot latency'''
         await ctx.send("`Ping: {0:.2f}ms`".format(round(self.bot.latency*1000, 1)))

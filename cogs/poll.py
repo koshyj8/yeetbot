@@ -5,7 +5,7 @@ from random import choice
 import discord
 from discord.ext import commands
 
-
+from discord_slash import cog_ext, SlashContext
 def to_emoji(c):
     base = 0x1f1e6
     return chr(base + c)

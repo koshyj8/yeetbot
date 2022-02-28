@@ -4,18 +4,18 @@ import asyncio
 from discord.ext.commands.converter import MemberConverter
 import youtube_dl
 import os
-from discord.ext import commands
+from discord.ext import commands, tasks
 import aiohttp
 from discord import Spotify
 import datetime as dt
 from enum import Enum
 import asyncio
 import logging
-
+import discord_ui
 from async_timeout import timeout
 from discord.ext import commands
 import math
-
+from discord_slash import cog_ext, SlashContext
 loop = False
 
 from core.utils.music_utils import *
@@ -86,7 +86,7 @@ class MusicPlayer(commands.Cog, name='Music'):
 		ctx.voice_state = self.get_user_voice_state(ctx)
 
 	@commands.command(name='musicsearch')
-	async def _search(self, ctx: commands.Context, *, search: str):
+	async def _search(self, ctx, *, search: str):
 		"""Searches youtube.
 		It returns an imbed of the first 10 results collected from youtube.
 		Then the user can choose one of the titles by typing a number
@@ -113,7 +113,7 @@ class MusicPlayer(commands.Cog, name='Music'):
 					await ctx.voice_state.songs.put(song)
 					await ctx.send('Enqueued {}'.format(str(source)))
 
-	@commands.command(name='join', invoke_without_subcommand=True)
+	@commands.command(name='join')
 	async def _join(self, ctx):
 		"""Joins a voice channel."""
 
@@ -141,7 +141,7 @@ class MusicPlayer(commands.Cog, name='Music'):
 
 		ctx.voice_state.voice = await destination.connect()
 
-	@commands.command(name='leave', aliases=['disconnect'])	
+	@commands.command(name='leave')	
 	async def _leave(self, ctx):
 		"""Clears the queue and leaves the voice channel."""
 		voice_state = ctx.author.voice
@@ -158,7 +158,7 @@ class MusicPlayer(commands.Cog, name='Music'):
 		except Exception:
 			print('Exception during exit: {0}'.format(Exception))
 
-	@commands.command(name='now', aliases=['current', 'playing'])
+	@commands.command(name='now')
 	async def _now(self, ctx):
 		"""Displays the currently playing song."""
 
@@ -166,7 +166,7 @@ class MusicPlayer(commands.Cog, name='Music'):
 
 	@commands.command(name='volume')
 	@commands.has_role("DJ")
-	async def _volume(self, ctx: commands.Context, *, volume: int):
+	async def _volume(self, ctx, *, volume: int):
 		"""Configure volume of the bot"""
 		
 		if not ctx.author.voice or not ctx.author.voice.channel:
@@ -200,7 +200,7 @@ class MusicPlayer(commands.Cog, name='Music'):
 			ctx.voice_state.voice.pause()
 			await ctx.send("`Song has been paused.`")
 
-	@commands.command(name='resume', aliases=['res'])	
+	@commands.command(name='resume')	
 	async def _resume(self, ctx):
 		"""Resumes a currently paused song."""
 		voice_state = ctx.author.voice
@@ -254,7 +254,7 @@ class MusicPlayer(commands.Cog, name='Music'):
 		else:
 			await ctx.send('You have already voted to skip this song.')
 
-	@commands.command(name='queue',aliases=['q'])
+	@commands.command(name='queue')
 	async def _queue(self, ctx, *, page: int = 1):
 		"""Shows the player's queue.
 		"""
@@ -277,7 +277,7 @@ class MusicPlayer(commands.Cog, name='Music'):
 		await ctx.send(embed=embed)
 
 	@commands.command(name='loop')
-	async def _loop(self, ctx: commands.Context):
+	async def _loop(self, ctx):
 		"""Loops the currently playing song.
 		Invoke this command again to unloop the song.
 		"""
@@ -289,7 +289,7 @@ class MusicPlayer(commands.Cog, name='Music'):
 		ctx.voice_state.loop = not ctx.voice_state.loop
 		await ctx.message.add_reaction('✅')
 
-	@commands.command(name='shuffle', aliases=['shuff'])
+	@commands.command(name='shuffle')
 	@commands.has_role("DJ")
 	async def _shuffle(self, ctx):
 		"""Shuffles the queue."""
@@ -315,41 +315,44 @@ class MusicPlayer(commands.Cog, name='Music'):
 	async def _play(self, ctx, *, search: str):
 		"""Plays a song.
 		"""
+		if 'https://open.spotify.com/track/' in search:
+			search = search.split('track/')[1].split('?')[0]
+			url = f'https://api.spotify.com/v1/track/{search[0]}?market=AE'
 
-		if search.startswith('https://open.spotify.com/'):
-			return
+			async with aiohttp.ClientSession() as session:
+				async with session.get(url) as r:
+					info = await dict(r)
+					print(info['name'])
 
-		if not ctx.voice_state.voice:
-			await ctx.invoke(self._join)
+		async with ctx.typing():
+			try:
+				source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop)
+			except YTDLError as e:
+				await ctx.send('An error occurred while processing this request: {}'.format(str(e)))
+			else:
+				song = Song(source)
 
-		if search.__contains__('?list='):
-			async with ctx.typing():
-				playlist, playlistTitle = self._playlist(search)
-				print(playlist, playlistTitle)
-				for i in range(11):
-					_link = playlist.items()[i]
-					try:
-						source = await YTDLSource.create_source(ctx, _link, loop=self.bot.loop)
-					except YTDLError as e:
-						await ctx.send('An error occurred while processing this request: {}'.format(str(e)))
-					else:
-						song = Song(source)
-						await ctx.voice_state.songs.put(song)
-				await ctx.send(f'Enqueued `{playlist.__len__()}` songs from **{playlistTitle}**')
-		else:
-			async with ctx.typing():
-				try:
-					source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop)
-				except YTDLError as e:
-					await ctx.send('An error occurred while processing this request: {}'.format(str(e)))
-				else:
-					song = Song(source)
-
-					await ctx.voice_state.songs.put(song)
-					await ctx.send('Enqueued {}'.format(str(source)))
+				await ctx.voice_state.songs.put(song)
+				await ctx.send('Enqueued {}'.format(str(source)))
+				print(type(ctx.voice_state.songs))
+				print(list(ctx.voice_state.songs))
     
-	@_join.before_invoke
-	@_play.before_invoke
+	@commands.command()
+	async def playnext(self, ctx,*, search:str):
+
+		async with ctx.typing():
+			try:
+				source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop)
+			except YTDLError as e:
+				await ctx.send('An error occurred while processing this request: {}'.format(str(e)))
+			else:
+				song = Song(source)
+				print(type(ctx.voice_state.songs))
+				await PlayerQueue(list(ctx.voice_state.songs).insert(song, 1))
+				await ctx.send('Enqueued {}'.format(str(source)))
+
+				print(type(ctx.voice_state.songs))
+
 	async def ensure_voice_state(self, ctx):
 		if not ctx.author.voice or not ctx.author.voice.channel:
 			raise commands.CommandError('`You are not connected to any voice channel.`')
@@ -358,7 +361,7 @@ class MusicPlayer(commands.Cog, name='Music'):
 			if ctx.voice_client.channel != ctx.author.voice.channel:
 				raise commands.CommandError('`Bot is already in a voice channel.`')
 
-	@commands.command(brief='Download songs', aliases=['find','dl'])
+	@commands.command(description='Download songs')
 	@commands.cooldown(1, 120, commands.BucketType.user)
 	async def download(self, ctx, *, song):
 		'''download a song'''
@@ -415,7 +418,7 @@ class MusicPlayer(commands.Cog, name='Music'):
 		if isinstance(exc, NoLyricsFound):
 			await ctx.send("No lyrics could be found.")
 
-	@commands.command(aliases=['spotdownload','spotdl'])
+	@commands.command()
 	@commands.cooldown(1, 120, commands.BucketType.user)
 	async def spotifydownload(self, ctx, user: MemberConverter = None):
 		'''Downloads the song a user is listening to on spotify.'''
@@ -490,24 +493,6 @@ class MusicPlayer(commands.Cog, name='Music'):
 				await ctx.voice_state.songs.put(song)
 
 				await ctx.send('Enqueued {}'.format(str(source)))
-
-	@_join.before_invoke
-	@_play.before_invoke
-	@_remove.before_invoke
-	@_shuffle.before_invoke
-	@_loop.before_invoke
-	@_queue.before_invoke
-	@_skip.before_invoke
-	@_pause.before_invoke
-	@_resume.before_invoke
-	@_leave.before_invoke
-	async def ensure_voice_state(self, ctx: commands.Context):
-		if not ctx.author.voice or not ctx.author.voice.channel:
-			raise commands.CommandError('`You are not connected to any voice channel.`')
-
-		if ctx.voice_client:
-			if ctx.voice_client.channel != ctx.author.voice.channel:
-				raise commands.CommandError('`Bot is already in a voice channel.`')
 
 def setup(bot):
 	bot.add_cog(MusicPlayer(bot))

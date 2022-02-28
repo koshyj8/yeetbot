@@ -204,7 +204,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
 
 	@classmethod
-	async def search_source(self, ctx: commands.Context, search: str, *, loop: asyncio.BaseEventLoop = None, bot):
+	async def search_source(self, ctx, search: str, *, loop: asyncio.BaseEventLoop = None, bot):
 		self.bot = bot
 		channel = ctx.channel
 		loop = loop or asyncio.get_event_loop()

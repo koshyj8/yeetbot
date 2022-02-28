@@ -1,18 +1,27 @@
 import datetime
 import sys
 from datetime import datetime
-
+import os
 import discord
 import discordbotdash.dash as dbd
 from cogwatch import watch
 from discord.ext import commands
 from discord.ext.commands.converter import MemberConverter
+from discord_slash import cog_ext, SlashContext
 
+def restart_bot():
+    os.execv(sys.executable, ['python'] + sys.argv)
 
 class Owner(commands.Cog):
     '''OWNER COMMANDS'''
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.command()
+    @commands.is_owner()
+    async def restart(self, ctx):
+        await ctx.send(f'`Restarting Bot 🔃`')
+        restart_bot()
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -26,7 +35,7 @@ class Owner(commands.Cog):
             embed.description = "Error: Missing required argument(s). Try again. ⛔"
         await ctx.send(embed=embed)
 
-    @commands.group(aliases=['p', 'pr'], brief='Changes the bot\'s status')
+    @commands.group(description='Changes the bot\'s status')
     @commands.is_owner()
     async def status(self, ctx):
         if ctx.invoked_subcommand is None:
@@ -42,25 +51,25 @@ class Owner(commands.Cog):
         await self.bot.change_presence(status=discord.Status.online)
         await ctx.send('`Changing status!`')
 
-    @status.command(aliases=['stream', 'streaming'], brief='Changes the bot\'s streaming status.')
+    @status.command(description='Changes the bot\'s streaming status.')
     @commands.is_owner()
     async def st(self, ctx, status, url):
         await self.bot.change_presence(status=discord.Status.do_not_disturb, activity=discord.Streaming(name=(status), url=url))
         await ctx.send(f'Bot has started streaming **{status}**.')
 
-    @status.command(aliases=['listen', 'listening'], brief='Changes the bot\'s listening status.')
+    @status.command(description='Changes the bot\'s listening status.')
     @commands.is_owner()
     async def l(self, ctx, *, status):
         await self.bot.change_presence(status=discord.Status.do_not_disturb, activity=discord.Activity(type=discord.ActivityType.listening, name=(status)))
         await ctx.send(f'Bot has started listening to **{status}**.')
 
-    @status.command(aliases=['watch', 'watching'], brief='Changes the bot\'s watching status.')
+    @status.command(description='Changes the bot\'s watching status.')
     @commands.is_owner()
     async def w(self, ctx, *, status):
         await self.bot.change_presence(status=discord.Status.do_not_disturb, activity=discord.Activity(type=discord.ActivityType.watching, name=(status)))
         await ctx.send(f'Bot has started watching **{status}**.')
 
-    @status.command(aliases=['game', 'gaming'], brief='Changes the bot\'s playing status.')
+    @status.command(description='Changes the bot\'s playing status.')
     @commands.is_owner()
     async def pl(self, ctx, *, status=None):
         if status == None:
@@ -68,13 +77,13 @@ class Owner(commands.Cog):
         await self.bot.change_presence(status=discord.Status.do_not_disturb, activity=discord.Game(status))
         await ctx.send(f'Bot has started playing {status}.')
 
-    @commands.command(aliases=['kill', 'off'], brief='Turns off the bot.')
+    @commands.command(description='Turns off the bot.')
     @commands.is_owner()
     async def shut(self, ctx):
         await ctx.send('`Bot going offline!`👋')
         await self.bot.change_presence(status=discord.Status.offline)
         await self.bot.close()
-        sys.exit()
+        exit()
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -129,7 +138,7 @@ class Owner(commands.Cog):
         await self.bot.user.edit(avatar=b)
         await ctx.send(f"`Changed Bot Avatar`")
 
-    @commands.command(aliases=['sendmsg'], hidden=True)
+    @commands.command()
     @commands.is_owner()
     async def dm(self, ctx, member: MemberConverter, *, message):
         await ctx.message.delete()
@@ -142,9 +151,8 @@ class Owner(commands.Cog):
         print('Good to Go!')
         print('Logged in as ---->', self.bot.user)
         print('ID:', self.bot.user.id)
-        await self.bot.change_presence(status=discord.Status.online)
         channel = self.bot.get_channel(792442544004923414)
-        print(discord.__version__)
+        await self.bot.change_presence(status=discord.Status.online)
         await channel.send('`Hey There! I\'m Online!`')
 
 

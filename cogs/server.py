@@ -1,14 +1,14 @@
 import discord
 from discord.ext import commands
 from discord.ext.commands import MemberConverter
-
+from discord_slash import cog_ext, SlashContext
 
 class Server(commands.Cog):
     """SERVER COMMANDS"""
     def __init__(self, bot):
         self.bot=bot
 
-    @commands.command(name='perms', aliases=['permissions'])
+    @commands.command(name='perms')
     @commands.guild_only()
     async def check_permissions(self, ctx, *, member: MemberConverter=None):
         """Check a users permissions"""
@@ -29,7 +29,7 @@ class Server(commands.Cog):
 
         await ctx.send(content=None, embed=embed)
 
-    @commands.command(name='top_role', aliases=['toprole'])
+    @commands.command(name='top_role')
     @commands.guild_only()
     async def show_toprole(self, ctx, *, member: MemberConverter = None):
         """Shows a member's top role"""
