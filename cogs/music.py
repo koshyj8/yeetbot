@@ -1,3 +1,4 @@
+from core.utils.music_utils import *
 from urllib.parse import urlparse
 import discord
 import asyncio
@@ -18,7 +19,6 @@ import math
 from discord_slash import cog_ext, SlashContext
 loop = False
 
-from core.utils.music_utils import *
 
 HUMANIZED_ACTIVITY = {
 	discord.ActivityType.unknown: "Unknown activity",
@@ -28,12 +28,14 @@ HUMANIZED_ACTIVITY = {
 	discord.ActivityType.watching: "Watching",
 	discord.ActivityType.custom: "Custom status"}
 
+
 def humanize_activity(activity_type: discord.ActivityType):
 	return HUMANIZED_ACTIVITY.get(activity_type)
 
+
 class MusicPlayer(commands.Cog, name='Music'):
 	"""MUSIC COMMANDS"""
-	
+
 	def __init__(self, bot: commands.Bot):
 		self.bot = bot
 		self.voice_states = {}
@@ -41,8 +43,8 @@ class MusicPlayer(commands.Cog, name='Music'):
 	def _playlist(self, search: str):
 		"""Returns a dict with all Playlist entries"""
 		ydl_opts = {
-				'ignoreerrors': True,
-				'quit': True
+                    'ignoreerrors': True,
+                				'quit': True
 		}
 
 		with youtube_dl.YoutubeDL(ydl_opts) as ydl:
@@ -63,7 +65,7 @@ class MusicPlayer(commands.Cog, name='Music'):
 					playlist[video.get(
 						'title')] = 'https://www.youtube.com/watch?v=' + video.get('id')
 			return playlist, playlistTitle
-	
+
 	def get_user_voice_state(self, ctx):
 		state = self.voice_states.get(ctx.guild.id)
 		if not state or not state.exists:
@@ -78,7 +80,8 @@ class MusicPlayer(commands.Cog, name='Music'):
 
 	def cog_check(self, ctx):
 		if not ctx.guild:
-			raise commands.NoPrivateMessage('This command can\'t be used in DM channels.')
+			raise commands.NoPrivateMessage(
+				'This command can\'t be used in DM channels.')
 
 		return True
 
@@ -132,7 +135,8 @@ class MusicPlayer(commands.Cog, name='Music'):
 		"""
 
 		if not channel and not ctx.author.voice:
-			raise VoiceError('`Please join a voice channel or specify a channel to join.`')
+			raise VoiceError(
+				'`Please join a voice channel or specify a channel to join.`')
 
 		destination = channel or ctx.author.voice.channel
 		if ctx.voice_state.voice:
@@ -141,7 +145,7 @@ class MusicPlayer(commands.Cog, name='Music'):
 
 		ctx.voice_state.voice = await destination.connect()
 
-	@commands.command(name='leave')	
+	@commands.command(name='leave')
 	async def _leave(self, ctx):
 		"""Clears the queue and leaves the voice channel."""
 		voice_state = ctx.author.voice
@@ -168,14 +172,14 @@ class MusicPlayer(commands.Cog, name='Music'):
 	@commands.has_role("DJ")
 	async def _volume(self, ctx, *, volume: int):
 		"""Configure volume of the bot"""
-		
+
 		if not ctx.author.voice or not ctx.author.voice.channel:
 			return await ctx.reply('`You are not connected to a voice channel.`')
-		
+
 		if not ctx.voice_state.is_playing:
 			return await ctx.reply('`Nothing is playing right now.`')
-		
-		if ctx.author.voice.channel != ctx.guild.me.voice.channel: 
+
+		if ctx.author.voice.channel != ctx.guild.me.voice.channel:
 			return await ctx.reply('`You are not in the same voice channel.`')
 		if volume > 100 or volume < 0:
 			return await ctx.reply('`Volume must be between 0 and 100`')
@@ -200,7 +204,7 @@ class MusicPlayer(commands.Cog, name='Music'):
 			ctx.voice_state.voice.pause()
 			await ctx.send("`Song has been paused.`")
 
-	@commands.command(name='resume')	
+	@commands.command(name='resume')
 	async def _resume(self, ctx):
 		"""Resumes a currently paused song."""
 		voice_state = ctx.author.voice
@@ -237,7 +241,7 @@ class MusicPlayer(commands.Cog, name='Music'):
 			return await ctx.send('Not playing any music right now...')
 
 		voter = ctx.message.author
-		if voter == ctx.voice_state.current.requester:		
+		if voter == ctx.voice_state.current.requester:
 			ctx.voice_state.skip()
 			await ctx.message.add_reaction('⏭')
 
@@ -270,10 +274,11 @@ class MusicPlayer(commands.Cog, name='Music'):
 
 		queue = ''
 		for i, song in enumerate(ctx.voice_state.songs[start:end], start=start):
-			queue += '`{0}.` [**{1.source.title}**]({1.source.url})\n'.format(i + 1, song)
+			queue += '`{0}.` [**{1.source.title}**]({1.source.url})\n'.format(
+				i + 1, song)
 
 		embed = (discord.Embed(description='**{} tracks:**\n\n{}'.format(len(ctx.voice_state.songs), queue))
-				 .set_footer(text='Viewing page {}/{}'.format(page, pages)))
+                    .set_footer(text='Viewing page {}/{}'.format(page, pages)))
 		await ctx.send(embed=embed)
 
 	@commands.command(name='loop')
@@ -336,9 +341,9 @@ class MusicPlayer(commands.Cog, name='Music'):
 				await ctx.send('Enqueued {}'.format(str(source)))
 				print(type(ctx.voice_state.songs))
 				print(list(ctx.voice_state.songs))
-    
+
 	@commands.command()
-	async def playnext(self, ctx,*, search:str):
+	async def playnext(self, ctx, *, search: str):
 
 		async with ctx.typing():
 			try:
@@ -493,6 +498,7 @@ class MusicPlayer(commands.Cog, name='Music'):
 				await ctx.voice_state.songs.put(song)
 
 				await ctx.send('Enqueued {}'.format(str(source)))
+
 
 def setup(bot):
 	bot.add_cog(MusicPlayer(bot))

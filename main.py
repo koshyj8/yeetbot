@@ -7,14 +7,12 @@ import time
 from random import choice
 
 import discord
-from boto.s3.connection import S3Connection
 from cogwatch import Watcher
 from discord import *
 from discord.ext import commands
 from discord.ext.commands.converter import MemberConverter
 from discord_slash import *
 from dotenv import load_dotenv
-from dotenv.main import DotEnv
 from pretty_help import PrettyHelp
 
 load_dotenv()

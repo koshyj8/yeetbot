@@ -202,7 +202,6 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
 		return cls(ctx, discord.FFmpegPCMAudio(info['url'], **cls.FFMPEG_OPTIONS), data=info)
 
-
 	@classmethod
 	async def search_source(self, ctx, search: str, *, loop: asyncio.BaseEventLoop = None, bot):
 		self.bot = bot
@@ -211,7 +210,8 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
 		self.search_query = '%s%s:%s' % ('ytsearch', 10, ''.join(search))
 
-		partial = functools.partial(self.ytdl.extract_info, self.search_query, download=False, process=False)
+		partial = functools.partial(
+			self.ytdl.extract_info, self.search_query, download=False, process=False)
 		info = await loop.run_in_executor(None, partial)
 
 		self.search = {}
@@ -219,7 +219,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
 		self.search["type"] = 'rich'
 		self.search["color"] = 7506394
 		self.search["author"] = {'name': f'{ctx.author.name}', 'url': f'{ctx.author.avatar_url}',
-								'icon_url': f'{ctx.author.avatar_url}'}
+						   'icon_url': f'{ctx.author.avatar_url}'}
 
 		lst = []
 		count = 0
@@ -256,9 +256,11 @@ class YTDLSource(discord.PCMVolumeTransformer):
 							"""data = value[sel - 1]"""
 							VId = e_list[sel-1]['id']
 							VUrl = 'https://www.youtube.com/watch?v=%s' % (VId)
-							partial = functools.partial(self.ytdl.extract_info, VUrl, download=False)
+							partial = functools.partial(
+								self.ytdl.extract_info, VUrl, download=False)
 							data = await loop.run_in_executor(None, partial)
-					rtrn = self(ctx, discord.FFmpegPCMAudio(data['url'], **self.FFMPEG_OPTIONS), data=data)
+					rtrn = self(ctx, discord.FFmpegPCMAudio(
+						data['url'], **self.FFMPEG_OPTIONS), data=data)
 				else:
 					rtrn = 'sel_invalid'
 			elif m.content == 'cancel':
@@ -267,7 +269,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
 				rtrn = 'sel_invalid'
 
 		return rtrn
-	
+
 	@staticmethod
 	def parse_duration(duration: int):
 		minutes, seconds = divmod(duration, 60)
@@ -301,9 +303,9 @@ class Song:
 
 	def create_embed(self):
 		embed = (discord.Embed(title='Now playing',
-						description='```css\n{0.source.title}\n```'.format(
-							self),
-						color=discord.Color.blurple())
+							description='```css\n{0.source.title}\n```'.format(
+								self),
+							color=discord.Color.blurple())
 			.add_field(name='Duration', value=self.source.duration)
 			.set_footer(text=f'Requested by {self.requester.name}')
 			.add_field(name='Channel', value='[{0.source.uploader}]({0.source.uploader_url})'.format(self))
@@ -369,16 +371,17 @@ class VoiceStateController:
 					self.bot.loop.create_task(self.stop())
 					self.exists = False
 					return
-				
+
 				self.current.source.volume = self._volume
 				self.voice.play(self.current.source, after=self.play_next_song)
 				await self.current.source.channel.send(embed=self.current.create_embed())
-			
+
 			#If the song is looped
 			elif self.loop == True:
-				self.now = discord.FFmpegPCMAudio(self.current.source.stream_url, **YTDLSource.FFMPEG_OPTIONS)
+				self.now = discord.FFmpegPCMAudio(
+					self.current.source.stream_url, **YTDLSource.FFMPEG_OPTIONS)
 				self.voice.play(self.now, after=self.play_next_song)
-			
+
 			await self.next.wait()
 
 	def play_next_song(self, error=None):
