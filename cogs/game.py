@@ -18,7 +18,7 @@ from discord.ext.commands import BucketType, MemberConverter
 from discord.ext.commands.converter import MemberConverter
 from PIL import *
 
-from discord_slash import cog_ext, SlashContext
+
 
 emojis_c = ['✅', '❌', '🤷', '👍', '👎', '⏮', '🛑']
 emojis_w = ['✅', '❌']
@@ -34,14 +34,6 @@ class Game(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 		self.trivia = TriviaClient()
-
-		self.wordlist = self.get_words()
-
-	def get_words(self):
-		with open(r"core\utils\word.txt") as file:
-			content = file.read()
-			wordlist = content.split('","')
-		return wordlist
 
 	def check(self, word, guess):
 		# Check if valid guess
@@ -61,7 +53,7 @@ class Game(commands.Cog):
 				response += guess[i].lower()
 			else:
 				response += '\\'
-		return True, 
+		return True,
 
 	@commands.command(name='2048')
 	async def twenty(self, ctx):
@@ -754,7 +746,7 @@ class Game(commands.Cog):
 				if len(message) == 5 and message.isdigit():
 					score = [int(char) for char in msg.content if char in "012"]
 				else:
-					await ctx.send("Only send a 5 digit response.")
+					await ctx.send("`Only send a 5 digit response.`")
 			except:
 				await ctx.send("`The command has timed-out. Please try again.`")
 			words_ = []
@@ -773,28 +765,6 @@ class Game(commands.Cog):
 		except IndexError:
 			await ctx.send(f'{ctx.message.author.mention} - No words found. Good luck on this one!')
 
-	@commands.command(name="wordle", description="Starts a wordle game with the server")
-	async def _wordle(self, ctx):
-		tries = 6
-		word = self.wordlist[random.randint(0, len(self.wordlist))]
-		await ctx.send(f"```Now Playing Wordle with {ctx.author.name}\nGuess the hidden word in 6 tries.\nAfter each guess:\n\tA capital letter means a correct letter.\n\tA lowercase letter means the letter is in the wrong spot.\n\tAnd a \\ means the letter was wrong.\nHint: the word is {word.upper()}```")
-		while tries > 0:
-			valid = False
-			while not valid:
-				msg = await self.bot.wait_for('message', check=lambda message: (message.author == ctx.author and message.content.split(' ')[0] == "!guess"))
-				guess = msg.content.content.split(' ')[1].lower()
-				valid, response = self.check(word, guess)
-				if valid:
-					tries -= 1
 
-				if response == response.upper() and '\\' not in response:
-					await ctx.send(f"```Correct! The word was {word.upper()}. You got it in {6-tries} guesses```")
-					return
-				else:
-					plural = "guess" if tries == 1 else "guesses"
-					await ctx.send(f"```{response}\t{tries} {plural} left```")
-		if tries == 0:
-			await ctx.send(f"```You didn't get the word, it was {word.upper()}```")
-
-def setup(bot):
-	bot.add_cog(Game(bot))
+async def setup(bot):
+    await bot.add_cog(Game(bot))

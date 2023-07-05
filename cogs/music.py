@@ -12,11 +12,9 @@ import datetime as dt
 from enum import Enum
 import asyncio
 import logging
-import discord_ui
 from async_timeout import timeout
 from discord.ext import commands
 import math
-from discord_slash import cog_ext, SlashContext
 loop = False
 
 
@@ -500,5 +498,5 @@ class MusicPlayer(commands.Cog, name='Music'):
 				await ctx.send('Enqueued {}'.format(str(source)))
 
 
-def setup(bot):
-	bot.add_cog(MusicPlayer(bot))
+async def setup(bot):
+    await bot.add_cog(MusicPlayer(bot))

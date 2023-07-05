@@ -1,6 +1,6 @@
 import asyncio
 import re
-from discord_slash import cog_ext, SlashContext
+
 import discord
 from discord import utils
 from discord.ext import commands
@@ -196,6 +196,6 @@ class Moderation(commands.Cog):
         await webhook.send(message, username=author.display_name, avatar_url=author.avatar_url)
         await ctx.message.delete()
 
-def setup(bot):
-    bot.add_cog(Moderation(bot))
+async def setup(bot):
+    await bot.add_cog(Moderation(bot))
 

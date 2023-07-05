@@ -188,8 +188,8 @@ class Translate(commands.Cog):
 			await ctx.send("`There were no valid non-morse words.`")
 			return
 
-		msg = "    ".join(morse_list)
-		msg = "\n" + msg + ""
+		msg = "".join(morse_list)
+		msg = msg
 		await ctx.send(f"`{msg}`")
 
 	@commands.command(pass_context=True)
@@ -233,5 +233,5 @@ class Translate(commands.Cog):
 		translated = translator.translate(text, dest=lang_to).text
 		await ctx.send(f"`{translated}`")
 
-def setup(bot):
-	bot.add_cog(Translate(bot))
+async def setup(bot):
+    await bot.add_cog(Translate(bot))

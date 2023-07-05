@@ -9,8 +9,7 @@ from discord import *
 from discord.ext import commands
 from discord.ext.commands.converter import MemberConverter
 from discord.user import *
-from discord_components import *
-from discord_slash import cog_ext, SlashContext
+
 
 def calculator(exp):
     o = exp.replace('x', '*')
@@ -70,7 +69,7 @@ class Information(commands.Cog):
                         activity.type), value=f"{activity.name}", inline=False)
 
             embed.set_author(name=f"{member}'s Information")
-            embed.set_thumbnail(url=member.avatar_url_as)
+            embed.set_thumbnail(url=member.avatar_as)
 
             embed.add_field(name="Member ID:", value=member.id)
             embed.add_field(name="Nickname:", value=member.display_name)
@@ -129,7 +128,7 @@ class Information(commands.Cog):
     async def avatar(self, ctx, member: MemberConverter = None):
         member = member or ctx.author
 
-        await ctx.send(member.avatar_url)
+        await ctx.send(member.avatar)
 
     @commands.command()
     async def github(self, ctx):
@@ -210,5 +209,5 @@ class Information(commands.Cog):
                     activity.type), value=f"{activity.name}", inline=False)
         await ctx.send(embed=embed)
 
-def setup(bot):
-    bot.add_cog(Information(bot))
+async def setup(bot):
+    await bot.add_cog(Information(bot))

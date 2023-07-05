@@ -9,7 +9,7 @@ from collections import namedtuple
 from datetime import datetime
 from io import BytesIO
 from typing import *
-from discord_slash import *
+
 import aiohttp
 import animec
 import discord
@@ -17,7 +17,7 @@ import praw
 import randfacts
 import requests
 import sr_api
-from discord_slash import cog_ext, SlashContext
+
 from aiohttp.client import ClientSession
 from animec import *
 from discord.ext import commands, tasks
@@ -452,5 +452,5 @@ class API(commands.Cog):
 
 
 
-def setup(bot):
-    bot.add_cog(API(bot))
+async def setup(bot):
+    await bot.add_cog(API(bot))

@@ -7,7 +7,7 @@ import discordbotdash.dash as dbd
 from cogwatch import watch
 from discord.ext import commands
 from discord.ext.commands.converter import MemberConverter
-from discord_slash import cog_ext, SlashContext
+
 
 def restart_bot():
     os.execv(sys.executable, ['python'] + sys.argv)
@@ -156,5 +156,5 @@ class Owner(commands.Cog):
         await channel.send('`Hey There! I\'m Online!`')
 
 
-def setup(bot):
-    bot.add_cog(Owner(bot))
+async def setup(bot):
+    await bot.add_cog(Owner(bot))

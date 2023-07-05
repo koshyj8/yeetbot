@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.ext.commands import MemberConverter
-from discord_slash import cog_ext, SlashContext
+
 
 class Server(commands.Cog):
     """SERVER COMMANDS"""
@@ -21,7 +21,7 @@ class Server(commands.Cog):
 
         # And to make it look nice, we wrap it in an Embed.
         embed = discord.Embed(title='Permissions for:', description=ctx.guild.name, colour=member.colour)
-        embed.set_author(icon_url=member.avatar_url, name=str(member))
+        embed.set_author(icon_url=member.avatar, name=str(member))
 
         # \uFEFF is a Zero-Width Space, which basically allows us to have an empty field name.
         embed.add_field(
@@ -39,5 +39,5 @@ class Server(commands.Cog):
 
         await ctx.send(f'`The top role for {member.display_name} is {member.top_role.name}`')
 
-def setup(bot):
-    bot.add_cog(Server(bot))
+async def setup(bot):
+    await bot.add_cog(Server(bot))

@@ -5,7 +5,7 @@ from random import choice
 import discord
 from discord.ext import commands
 
-from discord_slash import cog_ext, SlashContext
+
 def to_emoji(c):
     base = 0x1f1e6
     return chr(base + c)
@@ -75,5 +75,5 @@ class Poll(commands.Cog):
             await poll.add_reaction(emoji)
 
 
-def setup(bot):
-    bot.add_cog(Poll(bot))
+async def setup(bot):
+    await bot.add_cog(Poll(bot))

@@ -7,11 +7,9 @@ import time
 from random import choice
 
 import discord
-from cogwatch import Watcher
 from discord import *
 from discord.ext import commands
 from discord.ext.commands.converter import MemberConverter
-from discord_slash import *
 from dotenv import load_dotenv
 from pretty_help import PrettyHelp
 
@@ -22,13 +20,13 @@ start_time = time.time()
 intents = discord.Intents.all()
 intents.presences = True
 description = '''Yeetbot's owner commands'''
-client = commands.Bot(command_prefix='!', intents=intents, help_command=PrettyHelp(), description=description)
-slash = SlashCommand(client, sync_commands=True)
+client = commands.Bot(command_prefix='!', intents=intents,
+                      help_command=PrettyHelp(), description=description)
 ending_note = f"For more info about a command and how to use it, use {client.command_prefix}help <command> ."
 
 
-
-client.help_command = PrettyHelp(sort_commands = True, show_index = True, ending_note=ending_note, color = discord.Color.random(), no_category = "Owner Commands", index_title = f"Yeetbot's commands")
+client.help_command = PrettyHelp(sort_commands=True, show_index=True, ending_note=ending_note,
+                                 color=discord.Color.random(), no_category="Owner Commands", index_title=f"Yeetbot's commands")
 
 color = discord.Color.dark_gold()
 
@@ -37,30 +35,45 @@ color = discord.Color.dark_gold()
 async def load(ctx, extension):
 	if not ctx.author.guild_permissions.administrator:
 		return
-	client.load_extension(f'cogs.{extension}')
-	await ctx.send(f'`{extension}` `has been loaded.`')
-
+	try:
+		await client.load_extension(f'cogs.{extension}')
+		await ctx.send(f'`{extension}` `has been loaded.`')
+	except:
+		await ctx.send("`Invalid module.`")
 
 @client.command(description='Unload any cog extension.')
 async def unload(ctx, extension):
 	if not ctx.author.guild_permissions.administrator:
 		return
-	client.unload_extension(f'cogs.{extension}')
-	await ctx.send(f'`{extension}` `has been unloaded.`')
+	try:
+		await client.unload_extension(f'cogs.{extension}')
+		await ctx.send(f'`{extension}` `has been unloaded.`')
+	except:
+		await ctx.send("`Invalid module.`")
+
 
 @client.command(description='Reload a cog.')
 async def reload(ctx, extension):
 	if not ctx.author.guild_permissions.administrator:
 		return
-	client.reload_extension(f'cogs.{extension}')
-	await ctx.send(f'`{extension}` `has been reloaded.`')
+	try:
+		await client.reload_extension(f'cogs.{extension}')
+		await ctx.send(f'`{extension}` `has been reloaded.`')
+	except:
+		await ctx.send("`Invalid module.`")
+
+
 
 @client.event
 async def on_ready():
 	print('Bot ready.')
 
-	watcher = Watcher(client, path='cogs')
-	await watcher.start()
+
+
+async def load_extensions():
+	for filename in os.listdir('./cogs'):
+		if filename.endswith('.py'):
+			await client.load_extension(f'cogs.{filename[:-3]}')
 
 
 @client.command(description='Get how long the bot has been running.')
@@ -70,9 +83,10 @@ async def uptime(ctx):
 	text = str(datetime.timedelta(seconds=difference))
 	await ctx.send(f"`Current uptime: {text}`")
 
-for filename in os.listdir('./cogs'):
-	if filename.endswith('.py'):
-		client.load_extension(f'cogs.{filename[:-3]}')
 
+async def main():
+    async with client:
+        await load_extensions()
+        await client.start(os.getenv("discord_TOKEN"))
 
-client.run(os.getenv("discord_TOKEN"))
+asyncio.run(main())

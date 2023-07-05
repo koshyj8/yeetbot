@@ -13,7 +13,7 @@ from discord.ext import commands, menus
 from discord.ext.commands.converter import MemberConverter
 from pytz import timezone, utc
 
-from discord_slash import cog_ext, SlashContext
+
 
 class LeaderboardMenu(menus.ListPageSource):
     def __init__(self, data):
@@ -128,7 +128,7 @@ class Economy(commands.Cog):
         embed.add_field(name='Bank Balance', value=result[1])
         embed.add_field(name='Wallet', value=result[2])
         embed.add_field(name='Net Worth', value=result[2] + result[1])
-        embed.set_thumbnail(url=member.avatar_url)
+        embed.set_thumbnail(url=member.avatar)
         await ctx.send(embed=embed)
 
     @commands.command(description="Deposit money to the bank")
@@ -685,5 +685,5 @@ class Economy(commands.Cog):
             await ctx.send(f"{slotmachine} HA! YOU LOST! ")
 
 
-def setup(bot):
-    bot.add_cog(Economy(bot))
+async def setup(bot):
+    await bot.add_cog(Economy(bot))
