@@ -7,9 +7,7 @@
 <h4 align="center">Games, Economy, Music and Moderation. This is Yeetbot.</h4>
 
 <p align="center">
-  <a href="https://discord.gg/red">
-    <img src="https://discordapp.com/api/guilds/133049272517001216/widget.png?style=shield" alt="Discord Server">
-  </a>
+
   <a href="https://pypi.org/project/discord.py/">
      <img alt="PyPI" src="https://img.shields.io/pypi/v/discord.py">
   </a>
