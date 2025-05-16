@@ -1,9 +1,5 @@
 
 from discord.ext import commands
-import discord
-
-from typing import List, Optional, Union
-import asyncio
 import googletrans
 
 from core.utils.pagin import *

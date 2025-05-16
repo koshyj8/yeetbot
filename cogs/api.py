@@ -1,14 +1,10 @@
 import asyncio
-import datetime
 import os
 import random
 import re
 import urllib.parse
 import urllib.request
-from collections import namedtuple
 from datetime import datetime
-from io import BytesIO
-from typing import *
 
 import aiohttp
 import animec
@@ -19,8 +15,8 @@ import requests
 import sr_api
 
 from aiohttp.client import ClientSession
-from animec import *
-from discord.ext import commands, tasks
+
+from discord.ext import commands
 from praw import reddit
 
 api = sr_api.Client(os.getenv("SR_API"))
@@ -84,7 +80,7 @@ class API(commands.Cog):
         sub = res["subreddit"]
 
         embed = discord.Embed(
-            title=f'{title}', discription=f"{sub}", timestamp=datetime.datetime.utcnow())
+            title=f'{title}', description=f"{sub}", timestamp=datetime.datetime.utcnow())
         embed.set_image(url=res["image"])
         embed.set_footer(text=f"Upvote(s): {ups} | Downvote(s): {downs}")
 
@@ -447,9 +443,6 @@ class API(commands.Cog):
             embed.set_footer(
                 text=f'Requested by {ctx.message.author} • Page {index} of 3', icon_url=ctx.message.author.avatar_url)
             await msg.edit(embed=embed)
-"""
-    @tasks.loop(3600):"""
-
 
 
 async def setup(bot):

@@ -1,6 +1,4 @@
-import asyncio
 import datetime
-import json
 import random
 import sqlite3
 import time
@@ -8,12 +6,9 @@ from datetime import datetime as dte
 
 import aiosqlite
 import discord
-from core.utils.pagin import paginator, quickpaginator
 from discord.ext import commands, menus
 from discord.ext.commands.converter import MemberConverter
-from pytz import timezone, utc
-
-
+from pytz import timezone
 
 class LeaderboardMenu(menus.ListPageSource):
     def __init__(self, data):
@@ -87,8 +82,6 @@ class Economy(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        # Use the below line to debug if the cog stops working
-        #print('Economy Cog is active on startup')
         async with aiosqlite.connect("database\eco.sqlite") as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute("CREATE TABLE IF NOT EXISTS shop (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, price INTEGER, available BOOL);")
@@ -530,7 +523,6 @@ class Economy(commands.Cog):
                     '%Y-%m-%d %H:%M:%S')
                 await ctx.send(f"`This user was robbed in last the last 12 hours, give them a break. They were robbed last at {d}`")
 
-    # TODO: Add inventory, shop, buy, sell, gambling etc.
 
     @commands.group(invoke_without_command=True, description = "Shop-related commands")
     async def shop(self, ctx):

@@ -1,19 +1,12 @@
 from core.utils.music_utils import *
-from urllib.parse import urlparse
 import discord
 import asyncio
+import ffmpeg
 from discord.ext.commands.converter import MemberConverter
-import youtube_dl
-import os
-from discord.ext import commands, tasks
+from yt_dlp import YoutubeDL, utils
 import aiohttp
 from discord import Spotify
 import datetime as dt
-from enum import Enum
-import asyncio
-import logging
-from async_timeout import timeout
-from discord.ext import commands
 import math
 loop = False
 
@@ -42,10 +35,11 @@ class MusicPlayer(commands.Cog, name='Music'):
 		"""Returns a dict with all Playlist entries"""
 		ydl_opts = {
                     'ignoreerrors': True,
-                				'quit': True
+					'quit': True,
+                    'cookiefile': 'cookies.txt'
 		}
 
-		with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+		with YoutubeDL(ydl_opts) as ydl:
 			playlist_dict = ydl.extract_info(search, download=False)
 
 			playlistTitle = playlist_dict['title']
@@ -330,15 +324,15 @@ class MusicPlayer(commands.Cog, name='Music'):
 		async with ctx.typing():
 			try:
 				source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop)
+    
 			except YTDLError as e:
+
 				await ctx.send('An error occurred while processing this request: {}'.format(str(e)))
 			else:
 				song = Song(source)
 
 				await ctx.voice_state.songs.put(song)
 				await ctx.send('Enqueued {}'.format(str(source)))
-				print(type(ctx.voice_state.songs))
-				print(list(ctx.voice_state.songs))
 
 	@commands.command()
 	async def playnext(self, ctx, *, search: str):
@@ -370,7 +364,7 @@ class MusicPlayer(commands.Cog, name='Music'):
 		'''download a song'''
 		await ctx.send(f"`This will take some time as it downloads on S C A R R E D's device.`")
 		try:
-			with youtube_dl.YoutubeDL(ytdl_download_format_options) as ydl:
+			with YoutubeDL(ytdl_download_format_options) as ydl:
 				if "https://www.youtube.com/" in song:
 					download = ydl.extract_info(song, True)
 				else:
@@ -378,18 +372,18 @@ class MusicPlayer(commands.Cog, name='Music'):
 						"ytsearch:"+song, False)
 					download = ydl.extract_info(
 						infosearched['entries'][0]['webpage_url'], True)
-				filename = ydl.prepare_filename(download)
+				filename = ydl.prepare_filename(download) + ".mp3"
 				b = os.path.getsize(filename)
-				if b > 10000000:
+
+				if b > 100000000:
 					await ctx.send('`That download is greater than 100MB, i wont send it, bitch`')
-					os.remove(filename)
 				else:
 					time = await ctx.send("`The download will be uploaded shortly.`")
 					await asyncio.sleep(10)
 					await time.delete()
 					await ctx.send(file=discord.File(filename))
-					os.remove(filename)
-		except (youtube_dl.utils.ExtractorError, youtube_dl.utils.DownloadError):
+				os.remove(filename)
+		except (utils.ExtractorError, utils.DownloadError):
 			embed = discord.Embed(
 				title="Song couldn't be downloaded", description=("Song:"+song))
 			await ctx.send(embed=embed)
@@ -433,11 +427,11 @@ class MusicPlayer(commands.Cog, name='Music'):
 				if isinstance(activity, Spotify):
 					activitymusicname = activity.title
 
-		with youtube_dl.YoutubeDL(ytdl_download_format_options) as ydl:
+		with YoutubeDL(ytdl_download_format_options) as ydl:
 			infosearched = ydl.extract_info("ytsearch:"+activitymusicname, False)
 			download = ydl.extract_info(
 				infosearched['entries'][0]['webpage_url'], True)
-			filename = ydl.prepare_filename(download)
+			filename = ydl.prepare_filename(download) + ".mp3"
 			time = await ctx.send('`File will be uploaded shortly.`')
 			b = os.path.getsize(filename)
 			if b > 1000000:
@@ -445,8 +439,8 @@ class MusicPlayer(commands.Cog, name='Music'):
 			else:
 				await asyncio.sleep(10)
 				await time.delete()
-				await ctx.send(file=discord.File(filename))
-				os.remove(filename)
+				await ctx.send(file=discord.File(f"{filename}.mp3"))
+				os.remove(f"{filename}.mp3")
 
 	@commands.command()
 	async def spotify(self, ctx, member: MemberConverter = None):

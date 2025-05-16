@@ -1,27 +1,10 @@
 import inspect
-import urllib.parse
-import urllib.request
-from math import floor
-
 import discord
 from aiohttp.client import ClientSession
 from discord import *
 from discord.ext import commands
 from discord.ext.commands.converter import MemberConverter
 from discord.user import *
-
-
-def calculator(exp):
-    o = exp.replace('x', '*')
-    o = exp.replace('^', '**')
-
-    res = ''
-
-    try:
-        res = str(eval(o))
-    except:
-        result = 'An Error Occured'
-    return result
 
 
 HUMANIZED_ACTIVITY = {

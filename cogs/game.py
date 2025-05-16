@@ -1,24 +1,17 @@
 import asyncio
-import os
 import random
 import sqlite3
-import sys
-from copy import deepcopy as dc
 from random import randint, shuffle
-from time import time
 from typing import Dict, List, Tuple, Union
 import collections
 import akinator
 import discord
-from aiotrivia import AiotriviaException, ResponseError, TriviaClient
+from aiotrivia import AiotriviaException, TriviaClient
 from akinator.async_aki import Akinator
 from core.utils.gamefuncs import *
 from discord.ext import commands
 from discord.ext.commands import BucketType, MemberConverter
-from discord.ext.commands.converter import MemberConverter
 from PIL import *
-
-
 
 emojis_c = ['✅', '❌', '🤷', '👍', '👎', '⏮', '🛑']
 emojis_w = ['✅', '❌']
@@ -27,7 +20,6 @@ with open(r"core\utils\WORD.LST", "r") as f:
 	words = [word.strip() for word in f.readlines() if len(word.strip()) == 5]
 
 aki = Akinator()
-
 
 class Game(commands.Cog):
 	"""GAME COMMANDS"""
@@ -730,8 +722,8 @@ class Game(commands.Cog):
 
 			x += 1
 
-	@commands.command(name='wordlehelp')
-	async def wordlehelp(self, ctx):
+	@commands.command(name='wordle')
+	async def wordle(self, ctx):
 		with open(r"core\utils\WORD.LST", "r") as f:
 			words = [word.strip()
 					for word in f.readlines() if len(word.strip()) == 5]
