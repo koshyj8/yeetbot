@@ -1,17 +1,9 @@
-from typing import *
-from discord.ext import commands
 import random
-from time import time
 import asyncio
 import discord
-import asyncio
-import random
 from copy import deepcopy as dc
 
-from discord.ext.commands.converter import MemberConverter
-
 from akinator.async_aki import Akinator
-import akinator
 
 
 aki = Akinator()

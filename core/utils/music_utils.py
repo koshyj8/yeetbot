@@ -2,22 +2,16 @@ from urllib.parse import urlparse
 import discord
 import asyncio
 import random
-from discord.ext.commands.converter import MemberConverter
-import youtube_dl
+from yt_dlp import YoutubeDL as YoutubeDL
+from yt_dlp import utils
+
 import os
 from discord.ext import commands
-import aiohttp
-from discord import Spotify
-import datetime as dt
 import itertools
 import functools
 from enum import Enum
-import asyncio
-import logging
 
 from async_timeout import timeout
-from discord.ext import commands
-import math
 
 from core.utils.music_utils import *
 
@@ -121,7 +115,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
 		'quiet': True,
 		'no_warnings': True,
 		'default_search': 'auto',
-		'source_address': '0.0.0.0',
+		'source_address': '0.0.0.0'
 	}
 
 	FFMPEG_OPTIONS = {
@@ -129,7 +123,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
 		'options': '-vn',
 	}
 
-	ytdl = youtube_dl.YoutubeDL(YTDL_OPTIONS)
+	ytdl = YoutubeDL(YTDL_OPTIONS)
 
 	def __init__(self, ctx, source: discord.FFmpegPCMAudio, *, data: dict, volume: float = 0.5):
 		super().__init__(source, volume)
@@ -430,7 +424,7 @@ ytdl_format_options = {
 
 ytdl_download_format_options = {
 	'format': 'bestaudio/best',
-	'outtmpl': 'downloads/%(title)s.mp3',
+	'outtmpl': 'downloads/%(title)s',
 	'reactrictfilenames': True,
 	'yesplaylist': True,
 	'nocheckcertificate': True,
@@ -466,7 +460,7 @@ ffmpeg_options = {
 	# 'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5'
 }
 
-youtube_dl.utils.bug_reports_message = lambda: ''
+utils.bug_reports_message = lambda: ''
 
 ytdl_format_options = {
 	'format': 'bestaudio/best',
@@ -486,4 +480,4 @@ ffmpeg_options = {
 	'options': '-vn'
 }
 
-ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
+ytdl = YoutubeDL(ytdl_format_options)
